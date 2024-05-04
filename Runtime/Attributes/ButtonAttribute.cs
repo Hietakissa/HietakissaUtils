@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 public class ButtonAttribute : PropertyAttribute
@@ -7,10 +6,10 @@ public class ButtonAttribute : PropertyAttribute
     public readonly string OverrideName;
     public readonly float Height;
 
-    public ButtonAttribute(string functionName, string overrideName = "", float height = -1f)
+    public ButtonAttribute(string functionName, string overrideName = "", float height = 20f)
     {
         FunctionName = functionName;
         OverrideName = overrideName;
-        Height = height == -1f ? EditorGUIUtility.singleLineHeight : height;
+        Height = height;
     }
 }
