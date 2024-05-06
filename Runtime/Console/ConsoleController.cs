@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HietakissaUtils.Commands;
 using System.Collections;
+using System.Reflection;
 using HietakissaUtils;
 using UnityEngine.UI;
 using UnityEngine;
@@ -8,7 +9,6 @@ using System.Text;
 using System.Linq;
 using System;
 using TMPro;
-using System.Reflection;
 
 public class ConsoleController : MonoBehaviour
 {
@@ -112,9 +112,11 @@ public class ConsoleController : MonoBehaviour
 
         #endregion
 
+        
+
         MethodInfo[] methodsWithHKCommand = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(assembly => assembly.GetTypes())
-            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             .Where(method => method.GetCustomAttributes(typeof(HKCommandAttribute), false).Length > 0)
             .ToArray();
 
@@ -122,18 +124,72 @@ public class ConsoleController : MonoBehaviour
         CommandSystem.AddCommand(new DebugCommand("toggle_debug_console", () => { enableDebugConsole = !enableDebugConsole; }, true));
         foreach (MethodInfo methodInfo in methodsWithHKCommand)
         {
-            //DebugCommandBase command = new DebugCommand
+            Delegate commandAction = Delegate.CreateDelegate(typeof(Action), methodInfo);
+            //DebugCommandBase command = new DebugCommand(methodInfo.Name, commandAction)
             //{
             //    //commandName = methodInfo.Name,
-            //    commandName = "",
+            //    commandName = "s",
             //    types = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray(),
-            //    CommandDelegate = Delegate.CreateDelegate(typeof(Action), methodInfo)
+            //    CommandDelegate = Delegate.CreateDelegate(typeof(Action), methodInfo),
             //};
-
-            CommandSystem.AddCommand(new DebugCommand(methodInfo.Name, () => Debug.Log($"{methodInfo.GetParameters().Select(p => p.ParameterType).ToArray()}")));
+            //
+            //Type[] types = types = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
+            //
+            //CommandSystem.AddCommand(new DebugCommand(methodInfo.Name, () => Debug.Log($"{methodInfo.GetParameters().Select(p => p.ParameterType).ToArray()}")));
         }
 
         Application.logMessageReceived += LogReceived;
+    }
+
+    void AddCommands()
+    {
+        string[] ignoredAssemblies = new string[]
+        {
+            "System",
+            "Unity",
+            "mscorlib",
+            "Assembly-CSharp",
+            "Mono.",
+            "Microsoft.",
+            "Assembly-UnityScript",
+            "netstandard",
+            "ExCSS",
+            "JetBrains",
+            "nunit",
+            "Bee"
+        };
+
+        Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        foreach (Assembly assembly in assemblies)
+        {
+            bool shouldIgnore = false;
+            foreach (string ignoreAssembly in ignoredAssemblies)
+            {
+                if (assembly.GetName().Name.StartsWith(ignoreAssembly))
+                {
+                    shouldIgnore = true;
+                    break;
+                }
+            }
+            if (shouldIgnore) continue;
+
+
+            Type[] types = assembly.GetTypes();
+            foreach (Type type in types)
+            {
+                MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                foreach (MethodInfo method in methods)
+                {
+                    if (method.GetCustomAttributes(typeof(HKCommandAttribute), false).Length > 0) AddCommandFromMethodInfo(method);
+                }
+            }
+        }
+
+
+        void AddCommandFromMethodInfo(MethodInfo method)
+        {
+            CommandSystem.AddCommand(new DebugCommand(method.Name, () => Debug.Log($"{method.GetParameters().Select(p => p.ParameterType).ToArray()}")));
+        }
     }
 
     void Start()

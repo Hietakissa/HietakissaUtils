@@ -12,6 +12,7 @@ namespace HietakissaUtils
     using UnityEditor;
     using System.IO;
     using System;
+    using UnityEngine.Scripting;
 
     public static class Extensions
     {
@@ -324,40 +325,12 @@ namespace HietakissaUtils
 
             return destination as T;
         }
+
+        public static float MaxClipLength(this AudioSource source) => source.clip ? source.clip.length / Mathf.Abs(source.pitch) : 0f;
     }
 
     public abstract class Maf
     {
-        public static Vector2 Vector2Average(params Vector2[] vectors)
-        {
-            float totalX = 0f, totalY = 0f;
-
-            for (int i = 0; i < vectors.Length; i++)
-            {
-                Vector2 vector = vectors[i];
-
-                totalX += vector.x;
-                totalY += vector.y;
-            }
-
-            return new Vector2(totalX / vectors.Length, totalY / vectors.Length);
-        }
-        public static Vector3 Vector3Average(params Vector3[] vectors)
-        {
-            float totalX = 0f, totalY = 0f, totalZ = 0f;
-
-            for (int i = 0; i < vectors.Length; i++)
-            {
-                Vector3 vector = vectors[i];
-
-                totalX += vector.x;
-                totalY += vector.y;
-                totalZ += vector.z;
-            }
-
-            return new Vector3(totalX / vectors.Length, totalY / vectors.Length, totalZ / vectors.Length);
-        }
-
         public static Vector3 Direction(Vector3 from, Vector3 to) => (to - from).normalized;
 
         public static Vector3 Slerp(Vector3 from, Vector3 to, float t, Vector3 origin)
@@ -1437,7 +1410,7 @@ namespace HietakissaUtils
 
 
         [AttributeUsage(AttributeTargets.Method)]
-        public class HKCommandAttribute : Attribute
+        public class HKCommandAttribute : PreserveAttribute // Derive from Preserve to make sure the methods are never stripped by Code Stripping
         {
 
         }

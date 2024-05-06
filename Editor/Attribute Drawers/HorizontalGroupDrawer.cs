@@ -14,31 +14,22 @@ public class HorizontalGroupDrawer : PropertyDrawer
 
     void DrawGroup(Rect position, SerializedProperty property, GUIContent label, int groupSize)
     {
-        EditorGUIUtility.labelWidth = 0f;
-
-        int longest = 0;
-
         EditorGUILayout.BeginHorizontal();
 
         for (int i = 0; i < groupSize; i++)
         {
-            int reservedPixelsPerCharacter = 8;
+            const int reservedPixelsPerCharacter = 8;
 
-            /*if (property.type == "bool") EditorGUIUtility.fieldWidth = (position.width - longest * reservedPixelsPerCharacter) / groupSize * 0.1f;
-            else */
-            
 
-            if (property.type == "bool")
-            {
-                EditorGUIUtility.labelWidth = property.displayName.Length * reservedPixelsPerCharacter * 0.85f;
-                EditorGUILayout.PropertyField(property, true, GUILayout.Width(property.displayName.Length * reservedPixelsPerCharacter + 20f));
-            }
-            else
-            {
-                EditorGUIUtility.labelWidth = property.displayName.Length * reservedPixelsPerCharacter;
-                EditorGUIUtility.fieldWidth = (position.width - longest * reservedPixelsPerCharacter) / groupSize;
-                EditorGUILayout.PropertyField(property, true);
-            }
+            float propertyWidth = position.width / groupSize;
+            float labelWidth = Mathf.Clamp(property.displayName.Length * reservedPixelsPerCharacter, 0f, propertyWidth * 0.55f);
+
+            EditorGUIUtility.labelWidth = labelWidth;
+            EditorGUIUtility.fieldWidth = propertyWidth - labelWidth;
+
+            EditorGUILayout.PropertyField(property, true);
+
+            /// ToDo: figure out a way to better calculate the minimum width for a property, for example a bool should NOT have the same amount of reserved space as a Vector3
 
             if (!property.Next(false)) break;
         }
@@ -46,8 +37,5 @@ public class HorizontalGroupDrawer : PropertyDrawer
         EditorGUILayout.EndHorizontal();
     }
 
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-    {
-        return 0f;
-    }
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => 0f;
 }
