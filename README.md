@@ -3,3 +3,5 @@ This package is currently mainly developed for my own needs, but if you're inter
 
 Should be compatible down to Unity 2021.3, possibly older without the SceneReference class. 
 Everything is constantly WIP, so expect things to occasionally break/change between versions.
+
+To install simply open the Unity Package Manager, and 'Add package from git URL...' with 'https://github.com/Hietakissa/HietakissaUtils.git'.
