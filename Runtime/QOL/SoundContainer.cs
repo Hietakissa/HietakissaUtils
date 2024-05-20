@@ -6,7 +6,7 @@ using UnityEditor;
 namespace HietakissaUtils
 {
     [CreateAssetMenu(menuName = "HK Utils/Sound Container", fileName = "New Sound Container")]
-    public class HKSoundContainer : ScriptableObject
+    public class SoundContainer : ScriptableObject
     {
         [field: SerializeField] public SoundPlayMode Mode { get; private set; }
 
@@ -18,8 +18,8 @@ namespace HietakissaUtils
         public Vector2 PitchRange => pitchRange;
         [SerializeField][MinMaxRange(-3f, 3f, true)] Vector2 pitchRange = new Vector2(1f, 1f);
 
-        public HKSoundClip[] Sounds => sounds;
-        [SerializeField] HKSoundClip[] sounds;
+        public SoundClip[] Sounds => sounds;
+        [SerializeField] SoundClip[] sounds;
 
         List<int> shuffleIndexList = new List<int>();
         int lastIndex = -1;
@@ -28,7 +28,7 @@ namespace HietakissaUtils
 #if UNITY_EDITOR
         void OnValidate()
         {
-            foreach (HKSoundClip sound in sounds)
+            foreach (SoundClip sound in sounds)
             {
                 if (!sound._HasBeenManuallySet) sound.SetDefaults();
 
@@ -72,10 +72,10 @@ namespace HietakissaUtils
 
             if (!previewSource) previewSource = EditorUtility.CreateGameObjectWithHideFlags("HK Sound Container Preview", HideFlags.HideAndDontSave, typeof(AudioSource)).GetComponent<AudioSource>();
 
-            HKSoundClip clip = sounds[_selectedClip.RoundToNearest()];
+            SoundClip clip = sounds[_selectedClip.RoundToNearest()];
             if (clip == null) return;
 
-            ApplyClipToAudioSource(clip, previewSource);
+            ApplyClipToAudioSource(previewSource, clip);
             previewSource.Play();
         }
 
@@ -96,18 +96,19 @@ namespace HietakissaUtils
 #endif
 
 
-        public void ApplyToAudioSource(AudioSource source) => ApplyClipToAudioSource(sounds[GetSoundIndex()], source);
+        public void ApplyToAudioSource(AudioSource source) => ApplyClipToAudioSource(source, sounds[GetSoundIndex()]);
 
-        public void ApplyClipToAudioSource(HKSoundClip soundClip, AudioSource source)
+        public void ApplyClipToAudioSource(AudioSource source, SoundClip soundClip)
         {
             source.outputAudioMixerGroup = soundClip.OverrideMixer ?? DefaultMixer;
             source.clip = soundClip.Clip;
             source.volume = Random.Range(soundClip.ActualVolumeRange.x, soundClip.ActualVolumeRange.y);
             source.pitch = Random.Range(soundClip.ActualPitchRange.x, soundClip.ActualPitchRange.y);
             source.spatialBlend = soundClip.SpatialBlend;
+            source.loop = soundClip.Loop;
         }
 
-        int GetSoundIndex()
+        public int GetSoundIndex()
         {
             switch (Mode)
             {
@@ -138,7 +139,7 @@ namespace HietakissaUtils
     }
 
     [System.Serializable]
-    public class HKSoundClip
+    public class SoundClip
     {
 #if UNITY_EDITOR
         [SerializeField] [Tooltip("Only used for organization in the Editor.")] string name;
@@ -178,6 +179,12 @@ namespace HietakissaUtils
 
         public float SpatialBlend => spatialBlend;
         [SerializeField][Range(0f, 1f)] float spatialBlend = 1f;
+
+        public bool Loop => loop;
+        [SerializeField] bool loop;
+
+        public SoundContainer[] Next => next;
+        [SerializeField] SoundContainer[] next;
 
 
         public Vector2 ActualVolumeRange { get; private set; }

@@ -10,9 +10,7 @@ namespace HietakissaUtils
     using System.Text;
     using UnityEngine;
     using UnityEditor;
-    using System.IO;
     using System;
-    using UnityEngine.Scripting;
 
     public static class Extensions
     {
@@ -173,6 +171,16 @@ namespace HietakissaUtils
                 list[i] = temp;
             }
         }
+        public static void Shuffle<TElement>(this TElement[] array)
+        {
+            for (int i = array.Length; i-- > 0;)
+            {
+                int k = Random.Range(0, i + 1);
+                TElement temp = array[k];
+                array[k] = array[i];
+                array[i] = temp;
+            }
+        }
 
         public static bool IndexInBounds<TType>(this TType[] array, int index) => index >= 0 && index < array.Length;
         public static bool IndexInBounds<TType>(this TType[,] array, int x, int y) => x >= 0 && x < array.GetLength(0) && y >= 0 && y < array.GetLength(1);
@@ -326,7 +334,9 @@ namespace HietakissaUtils
             return destination as T;
         }
 
-        public static float MaxClipLength(this AudioSource source) => source.clip ? source.clip.length / Mathf.Abs(source.pitch) : 0f;
+        public static float GetRandomInRange(this Vector2 vector2) => Random.Range(vector2.x, vector2.y);
+
+        public static float GetMaxClipLength(this AudioSource source) => source.clip ? source.clip.length / Mathf.Abs(source.pitch) : 0f;
     }
 
     public abstract class Maf
@@ -372,7 +382,7 @@ namespace HietakissaUtils
         public static Quaternion EulerToQuaternion(Vector3 euler) => Quaternion.Euler(euler);
         public static Quaternion EulerToQuaternion(float x, float y, float z) => Quaternion.Euler(x, y, z);
 
-        public static bool RandomBool(int percentage) => Random.Range(1, 101) <= percentage;
+        public static bool RandomBool(int percentage) => Random.Range(0, 100) < percentage;
         public static bool RandomBool(float percentage) => Random.Range(0f, 1f) <= percentage * 0.01f;
 
         public static Quaternion GetRandomRotation() => Quaternion.Euler(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
@@ -399,6 +409,118 @@ namespace HietakissaUtils
                 else return -1f;
             }
         }
+    }
+
+    public static class Easing
+    {
+        // Everything here is very ugly, but it should work so who really cares. To visualize the functions see https://easings.net/.
+
+        public enum EasingMode
+        {
+            Linear,
+            EaseInSine,
+            EaseOutSine,
+            EaseInOutSine,
+            EaseInQuad,
+            EaseOutQuad,
+            EaseInOutQuad,
+            EaseInCubic,
+            EaseOutCubic,
+            EaseInOutCubic,
+            EaseInQuart,
+            EaseOutQuart,
+            EaseInOutQuart,
+            EaseInQuint,
+            EaseOutQuint,
+            EaseInOutQuint,
+            EaseInCirc,
+            EaseOutCirc,
+            EaseInOutCirc,
+            EaseInExpo,
+            EaseOutExpo,
+            EaseInOutExpo,
+            EaseInBack,
+            EaseOutBack,
+            EaseInOutBack,
+            EaseInElastic,
+            EaseOutElastic,
+            EaseInOutElastic,
+            EaseInBounce,
+            EaseOutBounce,
+            EaseInOutBounce
+        }
+
+
+        const float c1 = 1.70158f;
+        const float c2 = 2.5949095f;
+        const float c3 = 2.70158f;
+        const float c4 = 2 * Mathf.PI / 3;
+        const float c5 = 2 * Mathf.PI / 4.5f;
+
+        public static float InSine(float t) => 1 - Mathf.Cos(t * Mathf.PI / 2);
+        public static float OutSine(float t) => Mathf.Sin(t * Mathf.PI / 2);
+        public static float InOutSine(float t) => -(Mathf.Cos(Mathf.PI * t) - 1) / 2;
+
+        public static float InQuad(float t) => t * t;
+        public static float OutQuad(float t) => 1 - (1 - t) * (1 - t);
+        public static float InOutQuad(float t) => (t < 0.5f) ? (2 * t * t) : (1 - Mathf.Pow(-2 * t + 2, 2) / 2);
+
+        public static float InCubic(float t) => t * t * t;
+        public static float OutCubic(float t) => 1 - Mathf.Pow(1 - t, 3);
+        public static float InOutCubic(float t) => (t > 0.5f) ? (4 * t * t * t) : (1 - Mathf.Pow(-2 * t + 2, 3) / 2);
+
+        public static float InQuart(float t) => t * t * t * t;
+        public static float OutQuart(float t) => 1 - Mathf.Pow(1 - t, 4);
+        public static float InOutQuart(float t) => (t > 0.5f) ? (8 * t * t * t * t) : (1 - Mathf.Pow(-2 * t + 2, 4) / 2);
+
+        public static float InQuint(float t) => t * t * t * t * t;
+        public static float OutQuint(float t) => 1 - Mathf.Pow(1 - t, 5);
+        public static float InOutQuint(float t) => (t > 0.5f) ? (16 * t * t * t * t * t) : (1 - Mathf.Pow(-2 * t + 2, 5) / 2);
+
+        public static float InCirc(float t) => 1 - Mathf.Sqrt(1 - Mathf.Pow(t, 2));
+        public static float OutCirc(float t) => Mathf.Sqrt(1 - Mathf.Pow(t - 1, 2));
+        public static float InOutCirc(float t) => (t < 0.5f) ? ((1 - Mathf.Sqrt(1 - Mathf.Pow(2 * t, 2))) / 2) : ((Mathf.Sqrt(1 - Mathf.Pow(-2 * t + 2, 2)) + 1) / 2);
+
+        public static float InExpo(float t) => (t == 0f) ? 0 : Mathf.Pow(2, 10 * t - 10);
+        public static float OutExpo(float t) => (t == 1f) ? 1 : 1 - Mathf.Pow(2, -10 * t);
+        public static float InOutExpo(float t) => (t == 0f) ? 0 : (t == 1f) ? 1 : (t < 0.5f) ? (Mathf.Pow(2, 20 * t - 10) / 2) : ((2 - Mathf.Pow(2, -20 * t + 10)) / 2);
+
+        public static float InBack(float t) => c3 * t * t * t - c1 * t * t;
+        public static float OutBack(float t) => 1 + c3 * Mathf.Pow(t - 1, 3) + c1 * Mathf.Pow(t - 1, 2);
+        public static float InOutBack(float t) => (t < 0.5f) ? (Mathf.Pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2) / 2) : ((Mathf.Pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2);
+
+        public static float InElastic(float t)
+        {
+            if (t == 0) return 0;
+            else if (t == 1) return 1;
+            else return -Mathf.Pow(2, 10 * t - 10) * Mathf.Sin((t * 10 - 10.75f) * c4);
+        }
+        public static float OutElastic(float t)
+        {
+            if (t == 0) return 0;
+            else if (t == 1) return 1;
+            else return Mathf.Pow(2, -10 * t) * Mathf.Sin((t * 10 - 0.75f) * c4) + 1;
+        }
+        public static float InOutElastic(float t)
+        {
+            if (t == 0) return 0;
+            else if (t == 1) return 1;
+            else if (t < 0.5f) return -(Mathf.Pow(2, 20 * t - 10) * Mathf.Sin((20 * t - 11.125f) * c5)) / 2;
+            else return (Mathf.Pow(2, -20 * t + 10) * Mathf.Sin((20 * t - 11.125f) * c5)) / 2 + 1;
+        }
+
+        public static float InBounce(float t) => 1 - OutBounce(1 - t);
+        public static float OutBounce(float t)
+        {
+            const float n1 = 7.5625f;
+            const float d1 = 2.75f;
+
+            if (t < 1 / d1) return n1 * t * t;
+            else if (t < 2 / d1) return n1 * (t -= 1.5f / d1) * t + 0.75f;
+            else if (t < 2.5 / d1) return n1 * (t -= 2.25f / d1) * t + 0.9375f;
+            else return n1 * (t -= 2.625f / d1) * t + 0.984375f;
+        }
+        public static float InOutBounce(float t) => (t < 0.5) ? ((1 - OutBounce(1 - 2 * t)) / 2) : ((1 + OutBounce(2 * t - 1)) / 2);
     }
 
     public static class ControlRebinding
@@ -799,166 +921,6 @@ namespace HietakissaUtils
         }
     }
 
-    public class Pool
-    {
-        Queue<GameObject> poolQueue;
-
-        GameObject poolObject;
-        Transform parent;
-
-        public int GrowSize
-        {
-            get => GrowSize;
-            set
-            {
-                GrowSize = Mathf.Clamp(value, 1, 1000);
-            }
-        }
-
-        public int maxSize
-        {
-            get => maxSize;
-            set
-            {
-                maxSize = Mathf.Clamp(value, 1, 1000);
-            }
-        }
-        public int currentSize;
-        public int objectsAvailable;
-
-        public Pool(GameObject poolObject, Transform parent, int growSize = 10, int maxSize = 1000)
-        {
-            poolQueue = new Queue<GameObject>();
-
-            this.poolObject = poolObject;
-            this.parent = parent;
-            this.GrowSize = growSize;
-            this.maxSize = maxSize;
-
-            currentSize = 0;
-            objectsAvailable = 0;
-
-            GrowPool();
-        }
-
-
-        public GameObject Get()
-        {
-            if (objectsAvailable == 0) GrowPool();
-            if (objectsAvailable == 0) return null;
-
-            GameObject getObject = poolQueue.Dequeue();
-            objectsAvailable--;
-
-            getObject.SetActive(true);
-            return getObject;
-        }
-        public GameObject Instantiate(Vector3 position, Quaternion rotation)
-        {
-            GameObject getObject = Get();
-
-            if (getObject == null) return null;
-
-            getObject.transform.position = position;
-            getObject.transform.rotation = rotation;
-
-            return getObject;
-        }
-
-        public void ReturnObject(GameObject returnObject)
-        {
-            returnObject.SetActive(false);
-            if (!poolQueue.Contains(returnObject)) poolQueue.Enqueue(returnObject);
-
-            objectsAvailable++;
-        }
-
-        public bool GrowPool()
-        {
-            if (currentSize >= maxSize) return false;
-
-            for (int i = 0; i < GrowSize && currentSize < maxSize; i++)
-            {
-                GameObject newObject = MonoBehaviour.Instantiate(poolObject, parent.position, Quaternion.identity);
-                newObject.transform.parent = parent;
-
-                newObject.SetActive(false);
-                poolQueue.Enqueue(newObject);
-
-                currentSize++;
-                objectsAvailable++;
-            }
-
-            return true;
-        }
-
-        public void EmptyPool()
-        {
-            currentSize = 0;
-            objectsAvailable = 0;
-
-            poolQueue.Clear();
-        }
-    }
-
-    [Serializable]
-    public class LootTable<TTableItem>
-    {
-        [SerializeField] List<TableItem> table = new List<TableItem>();
-
-        public int TotalWeight { get; private set; } = 0;
-
-
-        public void AddItem(TTableItem item, int weight)
-        {
-            table.Add(new TableItem(item, weight));
-            CalculateTotalWeight();
-        }
-
-        public TTableItem GetItem()
-        {
-            if (TotalWeight == 0) CalculateTotalWeight();
-
-            int randomWeight = Random.Range(1, TotalWeight + 1);
-
-            foreach (TableItem bagItem in table)
-            {
-                randomWeight -= bagItem.weight;
-
-                if (randomWeight <= 0) return bagItem.item;
-            }
-
-            return default(TTableItem);
-        }
-
-        public void CalculateTotalWeight()
-        {
-            TotalWeight = 0;
-
-            foreach (TableItem item in table) TotalWeight += item.weight;
-        }
-
-        public void ClearAllItems()
-        {
-            table.Clear();
-            TotalWeight = 0;
-        }
-
-        [Serializable]
-        public class TableItem
-        {
-            public TTableItem item;
-            public int weight;
-
-            public TableItem(TTableItem item, int weight)
-            {
-                this.item = item;
-                this.weight = weight;
-            }
-        }
-    }
-
-
 
     namespace Ticker
     {
@@ -1062,6 +1024,8 @@ namespace HietakissaUtils
 
     namespace Serialization
     {
+        using System.IO;
+
         public static class Serializer
         {
             public static string SAVEDATA_FOLDER = Path.Combine(Application.persistentDataPath, "SaveData");
@@ -1304,6 +1268,8 @@ namespace HietakissaUtils
 
     namespace Commands
     {
+        using UnityEngine.Scripting;
+
         public static class CommandSystem
         {
             public static List<DebugCommandBase> commandList = new List<DebugCommandBase>();

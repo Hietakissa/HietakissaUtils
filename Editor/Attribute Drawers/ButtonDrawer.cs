@@ -9,16 +9,37 @@ public class ButtonDrawer : PropertyDrawer
     {
         ButtonAttribute button = attribute as ButtonAttribute;
         object buttonObject = property.serializedObject.targetObject;
+        
 
         MethodInfo method = buttonObject.GetType().GetMethod(button.FunctionName);
 
-        if (method == null || method.GetParameters().Length > 0) EditorGUILayout.LabelField("Method could not be found, or has parameters.");
+        if (!IsMethodValid(method)) EditorGUILayout.LabelField("Method could not be found, or has parameters without a default value.");
         else
         {
             if (GUI.Button(position, button.OverrideName == "" ? method.Name : button.OverrideName))
             {
                 method.Invoke(buttonObject, null);
             }
+        }
+
+
+        bool IsMethodValid(MethodInfo method)
+        {
+            if (method == null) return false;
+
+            bool hasDefaults = true;
+            ParameterInfo[] parameters = method.GetParameters();
+            foreach (ParameterInfo parameter in parameters)
+            {
+                if (!parameter.HasDefaultValue)
+                {
+                    hasDefaults = false;
+                    break;
+                }
+            }
+
+            return hasDefaults;
+            //method == null || method.GetParameters().Length > 0)
         }
     }
 

@@ -10,6 +10,9 @@ using System.Linq;
 using System;
 using TMPro;
 
+/// <summary>
+/// WIP, DO NOT USE. BROKEN. WILL BE REFACTORED IN A FUTURE VERSION. 
+/// </summary>
 public class ConsoleController : MonoBehaviour
 {
     public static ConsoleController Instance;
