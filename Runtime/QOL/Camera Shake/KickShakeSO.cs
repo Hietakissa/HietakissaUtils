@@ -2,7 +2,7 @@ namespace HietakissaUtils.CameraShake
 {
     using UnityEngine;
 
-    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Kick Shake", fileName = "New Kick Shake")]
+    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Kick Shake", fileName = "New Kick Shake", order = 2)]
     public class KickShakeSO : CameraShakeSO
     {
         public override CameraShake GetShake(Attenuation attenuation, Vector3 direction, float intensity, float length)

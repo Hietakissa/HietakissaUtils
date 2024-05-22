@@ -2,7 +2,7 @@ namespace HietakissaUtils.CameraShake
 {
     using UnityEngine;
 
-    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Bounce Shake", fileName = "New Bounce Shake")]
+    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Bounce Shake", fileName = "New Bounce Shake", order = 1)]
     public class BounceShakeSO : CameraShakeSO
     {
         //public float Frequency => frequency;

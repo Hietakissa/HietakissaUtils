@@ -2,7 +2,7 @@ namespace HietakissaUtils.CameraShake
 {
     using UnityEngine;
 
-    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Easing Envelope", fileName = "New Easing Envelope")]
+    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Easing Envelope", fileName = "New Easing Envelope", order = 1)]
     public class EasingEnvelopeSO : EnvelopeSO
     {
         [SerializeField] Easing.EasingMode mode;

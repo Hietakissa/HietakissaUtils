@@ -8,7 +8,7 @@ namespace HietakissaUtils
     [CreateAssetMenu(menuName = "HK Utils/Sound Container", fileName = "New Sound Container")]
     public class SoundContainer : ScriptableObject
     {
-        [field: SerializeField] public SoundPlayMode Mode { get; private set; }
+        [field: SerializeField] public SoundPlayMode Mode { get; private set; } = SoundPlayMode.Shuffle;
 
         [field: SerializeField] public AudioMixerGroup DefaultMixer { get; private set; }
 
@@ -31,6 +31,7 @@ namespace HietakissaUtils
             foreach (SoundClip sound in sounds)
             {
                 if (!sound._HasBeenManuallySet) sound.SetDefaults();
+                if (sound.Clip && sound._Name == "") sound.SetName();
 
                 sound.CalculateActualPitchAndVolume(pitchRange, volumeRange);
             }
@@ -91,7 +92,7 @@ namespace HietakissaUtils
 
         void OnDisable()
         {
-            DestroyImmediate(previewSource.gameObject);
+            if (previewSource) DestroyImmediate(previewSource.gameObject);
         }
 #endif
 
@@ -142,7 +143,7 @@ namespace HietakissaUtils
     public class SoundClip
     {
 #if UNITY_EDITOR
-        [SerializeField] [Tooltip("Only used for organization in the Editor.")] string name;
+        [SerializeField] [Tooltip("Only used for organization in the Editor.")] public string _Name;
         [HideInInspector] public bool _HasBeenManuallySet;
 
         public void SetDefaults()
@@ -151,6 +152,11 @@ namespace HietakissaUtils
             pitchRange = Vector2.one;
 
             _HasBeenManuallySet = true;
+        }
+
+        public void SetName()
+        {
+            _Name = clip.name;
         }
 
         public void CalculateActualPitchAndVolume(Vector2 basePitchVariation, Vector2 baseVolumeVariation)

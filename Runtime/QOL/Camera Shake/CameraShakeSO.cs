@@ -30,6 +30,12 @@ namespace HietakissaUtils.CameraShake
         [SerializeField] float maxRange;
 
 
+        protected virtual void OnValidate()
+        {
+            maxRange = Mathf.Max(float.Epsilon, maxRange);
+        }
+
+
         public float GetEnvelopeMultiplier(float t) => envelope.Evaluate(t);
         public abstract CameraShake GetShake(Attenuation attenuation, Vector3 direction, float intensity, float length);
     }

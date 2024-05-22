@@ -21,8 +21,22 @@ public class ConditionalFieldDrawer : PropertyDrawer
         SerializedProperty serializedProperty = property.serializedObject.FindProperty(conditionalField.ObjectName);
 
         if (serializedProperty == null) return false;
-        else if (serializedProperty.propertyType == SerializedPropertyType.Boolean && serializedProperty.boolValue == conditionalField.TargetBool) return true;
-        else if (serializedProperty.propertyType == SerializedPropertyType.Enum && serializedProperty.enumValueIndex == conditionalField.TargetEnum) return true;
-        else return false;
+        else if (serializedProperty.propertyType == SerializedPropertyType.Boolean)
+        {
+            if (serializedProperty.boolValue == conditionalField.TargetBool) return true;
+            return false;
+        }
+        else if (serializedProperty.propertyType == SerializedPropertyType.Enum)
+        {
+            if (serializedProperty.enumValueIndex == conditionalField.TargetEnum) return true;
+            return false;
+        }
+        else if (serializedProperty.propertyType == SerializedPropertyType.ObjectReference)
+        {
+            if (serializedProperty.objectReferenceValue != null) return true;
+            return false;
+        }
+        
+        return false;
     }
 }

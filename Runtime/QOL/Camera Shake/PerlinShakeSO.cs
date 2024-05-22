@@ -2,7 +2,7 @@ namespace HietakissaUtils.CameraShake
 {
     using UnityEngine;
 
-    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Perlin Shake", fileName = "New Perlin Shake")]
+    [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Perlin Shake", fileName = "New Perlin Shake", order = 0)]
     public class PerlinShakeSO : CameraShakeSO
     {
         public int Octaves => octaves;
