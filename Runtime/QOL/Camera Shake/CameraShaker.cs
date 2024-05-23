@@ -12,7 +12,6 @@ namespace HietakissaUtils.CameraShake
         [SerializeField] bool isMaster;
 
         List<CameraShake> shakes = new List<CameraShake>();
-        List<CameraShakeSource> shakeSources = new List<CameraShakeSource>();
 
 
         void Awake()
@@ -38,33 +37,26 @@ namespace HietakissaUtils.CameraShake
                 shake.Progress = Mathf.Min(shake.Progress + shake.Speed * Time.deltaTime, 1f);
 
                 float attenuationMultiplier = GetAttenuationMultiplierForShake(shake);
-                //if (shake.ShakeSettings.AttenuationEnvelope == null) attenuationMultiplier = 1f;
-                //else
-                //{
-                //    Vector3 attenuationPos = shake.Attenuation.ShakeTransform == null ? shake.Attenuation.ShakePosition : shake.Attenuation.ShakeTransform.position;
-                //
-                //    float distance = Vector3.Distance(attenuationPos, shakeTransform.position);
-                //    attenuationMultiplier = shake.ShakeSettings.AttenuationEnvelope.Evaluate(distance / shake.Attenuation.MaxRange);
-                //}
-
                 totalDisplacement += Vector3.Scale(shake.Evaluate(Time.deltaTime * shake.Speed) * shake.Intensity * shake.ShakeSettings.GetEnvelopeMultiplier(shake.Progress) * attenuationMultiplier, shake.ShakeSettings.AxisScale);
 
                 if (shake.IsFinished) shakes.RemoveAt(i);
             }
 
-            for (int i = 0; i < shakeSources.Count; i++)
+            Debug.Log($"shakes: {shakes.Count}");
+
+            for (int i = 0; i < CameraShakeSource.Instances.Count; i++)
             {
-                CameraShakeSource shakeSource = shakeSources[i];
+                CameraShakeSource shakeSource = CameraShakeSource.Instances[i];
                 if (!shakeSource.IsPlaying) continue;
 
                 // Shakes should technically still be updated even though they are far away, so not sure if this optimization to disable far away shakes makes much sense
                 //float maxRange = shakeSource.GetMaxRange();
                 //if (Vector3.Distance(shakeTransform.position, shakeSource.transform.position) > maxRange) continue;
 
-                float deltaTime = Time.deltaTime * shakeSource.GetSpeed();
+                //float deltaTime = Time.deltaTime * shakeSource.GetSpeed();
                 float intensity = shakeSource.GetIntensity();
-                float attenuationMultiplier = GetAttenuationMultiplierForShake(shakeSource.ShakeInstance);
-                totalDisplacement += shakeSources[i].Evaluate(deltaTime) * intensity * attenuationMultiplier;
+                float attenuationMultiplier = GetAttenuationMultiplierForShake(shakeSource.ShakeInstance, shakeSource.GetMaxRange());
+                totalDisplacement += shakeSource.Evaluate() * intensity * attenuationMultiplier;
             }
 
 
@@ -85,6 +77,15 @@ namespace HietakissaUtils.CameraShake
             }
         }
 
+        void Reset()
+        {
+            if (!Instance)
+            {
+                isMaster = true;
+                Instance = this;
+            }
+        }
+
         protected void UnSetMaster()
         {
             isMaster = false;
@@ -98,9 +99,6 @@ namespace HietakissaUtils.CameraShake
             this.shakeTransform?.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             this.shakeTransform = shakeTransform;
         }
-
-        public void RegisterShakeSource(CameraShakeSource shakeSource) => shakeSources.Add(shakeSource);
-        public void UnRegisterShakeSource(CameraShakeSource shakeSource) => shakeSources.Remove(shakeSource);
 
         public void Shake(CameraShakeSO cameraShake, Vector3 direction = new Vector3(), float intensity = -1, float length = -1)
         {
@@ -158,6 +156,17 @@ namespace HietakissaUtils.CameraShake
 
                 float distance = Vector3.Distance(attenuationPos, shakeTransform.position);
                 return shake.ShakeSettings.AttenuationEnvelope.Evaluate(distance / shake.Attenuation.MaxRange);
+            }
+        }
+        float GetAttenuationMultiplierForShake(CameraShake shake, float maxRange)
+        {
+            if (shake.ShakeSettings.AttenuationEnvelope == null) return 1f;
+            else
+            {
+                Vector3 attenuationPos = shake.Attenuation.ShakeTransform == null ? shake.Attenuation.ShakePosition : shake.Attenuation.ShakeTransform.position;
+
+                float distance = Vector3.Distance(attenuationPos, shakeTransform.position);
+                return shake.ShakeSettings.AttenuationEnvelope.Evaluate(distance / maxRange);
             }
         }
     }

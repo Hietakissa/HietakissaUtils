@@ -59,6 +59,7 @@ namespace HietakissaUtils.CameraShake
         }
 
         public abstract Vector3 Evaluate(float deltaTime);
+        public abstract void Reset();
     }
 
     [System.Serializable]

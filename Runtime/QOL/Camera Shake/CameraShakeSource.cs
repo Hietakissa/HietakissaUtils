@@ -1,13 +1,17 @@
 namespace HietakissaUtils.CameraShake
 {
+    using System.Collections.Generic;
     using UnityEngine;
 
     public class CameraShakeSource : MonoBehaviour
     {
+        public static List<CameraShakeSource> Instances = new List<CameraShakeSource>();
+
         public CameraShakeSO CameraShake => cameraShake;
         [SerializeField] CameraShakeSO cameraShake;
 
         [SerializeField] bool playOnAwake;
+        [SerializeField] bool loop;
 
         [HorizontalGroup(2)]
         [Space(7)]
@@ -31,49 +35,61 @@ namespace HietakissaUtils.CameraShake
         public bool IsPlaying { get; private set; }
 
         public float GetMaxRange() => overrideRange ? range : cameraShake.MaxRange;
-        public float GetSpeed() => overrideSpeed ? speed : 1f / cameraShake.Length;
+        public float GetSpeed() => overrideSpeed ? speed / cameraShake.Length : 1f / cameraShake.Length;
         public float GetIntensity() => overrideIntensity ? intensity : cameraShake.Intensity;
 
-        public Vector3 Evaluate(float deltaTime)
-        {
-            return shakeInstance.Evaluate(deltaTime);
-        }
+        Vector3 offset;
 
-        public void Play(CameraShakeSO shake)
-        {
-            cameraShake = shake;
-            shakeInstance = cameraShake?.GetShake(new Attenuation(transform, transform.position, GetMaxRange()), Vector3.zero, GetIntensity(), 1f / GetSpeed());
-            Play();
-        }
-        public void Play()
-        {
-            if (!cameraShake) return;
-
-            IsPlaying = true;
-        }
 
         void Awake()
         {
             if (playOnAwake) Play();
         }
 
+        void Update()
+        {
+            float deltaTime = Time.deltaTime * GetSpeed();
+            shakeInstance.Progress = Mathf.Min(shakeInstance.Progress + deltaTime, 1f);
+            offset = shakeInstance.Evaluate(deltaTime);
 
-        //public void ShakeAt(CameraShakeSO cameraShake, Transform shakeTransform = null, Vector3 direction = new Vector3(), float intensity = -1, float length = -1, float? maxRange = null)
-        //{
-        //    intensity = GetIntensityForShake(cameraShake, intensity);
-        //    length = GetLengthForShake(cameraShake, length);
-        //
-        //    float range = GetMaxRangeForShake(cameraShake, maxRange);
-        //
-        //    CameraShake shake = cameraShake.GetShake(new Attenuation(shakeTransform, Vector3.zero, range), direction, intensity, length);
-        //    shakes.Add(shake);
-        //}
+            if (shakeInstance.IsFinished)
+            {
+                if (loop) shakeInstance.Reset();
+                else Stop();
+            }
+        }
 
-        void OnEnable() => CameraShaker.Instance?.RegisterShakeSource(this);
-        void OnDisable() => CameraShaker.Instance?.UnRegisterShakeSource(this);
+        void OnValidate()
+        {
+            range = Mathf.Max(float.Epsilon, range);
+            speed = Mathf.Max(float.Epsilon, speed);
+            intensity = Mathf.Max(float.Epsilon, intensity);
+        }
 
+        public void Play(CameraShakeSO shake)
+        {
+            cameraShake = shake;
+            Play();
+        }
+        public void Play()
+        {
+            if (!cameraShake) return;
+            if (shakeInstance == null) shakeInstance = GetShakeInstance();
+            else shakeInstance.Reset();
 
-        
+            IsPlaying = true;
+            Instances.Add(this);
+        }
+        public void Stop()
+        {
+            IsPlaying = false;
+            Instances.Remove(this);
+        }
+
+        public Vector3 Evaluate() => offset;
+
+        CameraShake GetShakeInstance() => cameraShake.GetShake(new Attenuation(transform, transform.position, GetMaxRange()), Vector3.zero, GetIntensity(), 1f / GetSpeed());
+
 
 #if UNITY_EDITOR
         void OnDrawGizmosSelected()

@@ -15,11 +15,12 @@ namespace HietakissaUtils.CameraShake
     {
         public Kickshake(CameraShakeSO shakeSettings, Attenuation attenuation, Vector3 direction, float intensity, float length) : base(shakeSettings, attenuation, direction, intensity, length)
         {
+            startDirection = direction;
             if (direction == Vector3.zero) currentOffset = Random.insideUnitSphere;
             else currentOffset = direction;
         }
 
-        float t;
+        Vector3 startDirection;
         Vector3 previousOffset;
         Vector3 currentOffset;
 
@@ -27,9 +28,9 @@ namespace HietakissaUtils.CameraShake
 
         public override Vector3 Evaluate(float deltaTime)
         {
-            t += deltaTime;
+            //Progress += deltaTime;
 
-            if (t >= 1f)
+            if (Progress >= 1f)
             {
                 if (returning)
                 {
@@ -37,12 +38,21 @@ namespace HietakissaUtils.CameraShake
                     return Vector3.zero;
                 }
 
-                t -= 1f;
+                Progress -= 1f;
                 returning = true;
                 currentOffset = Vector3.zero;
             }
 
-            return Vector3.Lerp(previousOffset, currentOffset, t);
+            return Vector3.Lerp(previousOffset, currentOffset, Progress);
+        }
+
+        public override void Reset()
+        {
+            Progress = 0f;
+            IsFinished = false;
+
+            if (startDirection == Vector3.zero) currentOffset = Random.insideUnitSphere;
+            else currentOffset = startDirection;
         }
     }
 }

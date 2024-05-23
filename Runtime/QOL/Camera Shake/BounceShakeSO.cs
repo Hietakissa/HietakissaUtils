@@ -5,9 +5,6 @@ namespace HietakissaUtils.CameraShake
     [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Shakes/Bounce Shake", fileName = "New Bounce Shake", order = 1)]
     public class BounceShakeSO : CameraShakeSO
     {
-        //public float Frequency => frequency;
-        //[SerializeField] float frequency = 20f;
-
         public float Randomness => randomness;
         [Header("Bounce Settings")]
         [SerializeField]
@@ -29,21 +26,17 @@ namespace HietakissaUtils.CameraShake
         {
             shake = shakeSettings as BounceShakeSO;
 
-            if (direction == Vector3.zero)
-            {
-                this.direction = Random.insideUnitSphere;
-                currentOffset = this.direction;
-            }
-            else
-            {
-                this.direction = direction;
-                currentOffset = this.direction;
-            }
+            startDirection = direction;
+
+            if (direction == Vector3.zero) this.direction = Random.insideUnitSphere;
+            else this.direction = direction;
+            currentOffset = this.direction;
         }
 
         BounceShakeSO shake;
-        int bounceIndex;
         float t;
+        int bounceIndex;
+        Vector3 startDirection;
         Vector3 direction;
         Vector3 previousOffset;
         Vector3 currentOffset;
@@ -51,8 +44,8 @@ namespace HietakissaUtils.CameraShake
         public override Vector3 Evaluate(float deltaTime)
         {
             deltaTime *= shake.Bounces + 1;
-
             t += deltaTime;
+
             if (t <= 1f)
             {
                 return Vector3.Lerp(previousOffset, currentOffset, Easing.InOutSine(t));
@@ -76,9 +69,20 @@ namespace HietakissaUtils.CameraShake
                 float decayValue = 1f - (float)bounceIndex / shake.Bounces;
                 currentOffset = decayValue * decayValue * direction;
 
-                Debug.Log($"bounce finished, next lerp range: {previousOffset}, {currentOffset}");
                 return evaluation;
             }
+        }
+
+        public override void Reset()
+        {
+            Progress = 0f;
+            t = 0f;
+            IsFinished = false;
+
+            if (startDirection == Vector3.zero) direction = Random.insideUnitSphere;
+            else direction = startDirection;
+
+            currentOffset = direction;
         }
     }
 }

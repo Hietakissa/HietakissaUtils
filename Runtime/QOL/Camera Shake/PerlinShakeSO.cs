@@ -52,7 +52,7 @@ namespace HietakissaUtils.CameraShake
         public override Vector3 Evaluate(float deltaTime)
         {
             Vector3 totalNoise = Vector3.zero;
-            float magnitude = shake.Magnitude, frequency = shake.Frequency;
+            float magnitude = shake.Magnitude, frequency = shake.Frequency * Progress;
 
             for (int i = 0; i < shake.Octaves; i++)
             {
@@ -69,12 +69,20 @@ namespace HietakissaUtils.CameraShake
             return totalNoise / shake.Octaves;
         }
 
+        public override void Reset()
+        {
+            Progress = 0f;
+            IsFinished = false;
+        }
+
         Vector3 SampleNoise(Vector2 offset, float magnitude, float frequency)
         {
+            float x = offset.x * frequency;
+            float y = offset.y * frequency;
             Vector3 noiseVector = new Vector3(
-                Mathf.PerlinNoise(offset.x + Time.time * frequency, offset.y),
-                Mathf.PerlinNoise(offset.x, offset.y + Time.time * frequency),
-                Mathf.PerlinNoise(offset.x + Time.time * frequency, offset.y + Time.time * frequency));
+                Mathf.PerlinNoise(x, offset.y),
+                Mathf.PerlinNoise(offset.x, y),
+                Mathf.PerlinNoise(x, y));
 
             noiseVector = (noiseVector - new Vector3(0.5f, 0.5f, 0.5f)) * magnitude; // Axis go from 0 > 1 to -0.5 > 0.5
             return noiseVector;
