@@ -38,6 +38,9 @@ namespace HietakissaUtils.CameraShake
         public float GetSpeed() => overrideSpeed ? speed / cameraShake.Length : 1f / cameraShake.Length;
         public float GetIntensity() => overrideIntensity ? intensity : cameraShake.Intensity;
 
+        CameraShake GetShakeInstance() => cameraShake.GetShake(new Attenuation(transform, transform.position, GetMaxRange()), Vector3.zero, GetIntensity(), 1f / GetSpeed());
+        public Vector3 Evaluate() => offset;
+
         Vector3 offset;
 
 
@@ -66,6 +69,9 @@ namespace HietakissaUtils.CameraShake
             intensity = Mathf.Max(float.Epsilon, intensity);
         }
 
+        void OnDisable() => Stop();
+
+
         public void Play(CameraShakeSO shake)
         {
             cameraShake = shake;
@@ -85,10 +91,6 @@ namespace HietakissaUtils.CameraShake
             IsPlaying = false;
             Instances.Remove(this);
         }
-
-        public Vector3 Evaluate() => offset;
-
-        CameraShake GetShakeInstance() => cameraShake.GetShake(new Attenuation(transform, transform.position, GetMaxRange()), Vector3.zero, GetIntensity(), 1f / GetSpeed());
 
 
 #if UNITY_EDITOR
