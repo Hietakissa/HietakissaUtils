@@ -457,6 +457,9 @@ namespace HietakissaUtils
         const float c4 = 2 * Mathf.PI / 3;
         const float c5 = 2 * Mathf.PI / 4.5f;
 
+
+        public static float SoftLimit(float x) => (float)Math.Tanh(x);
+
         public static float InSine(float t) => 1 - Mathf.Cos(t * Mathf.PI / 2);
         public static float OutSine(float t) => Mathf.Sin(t * Mathf.PI / 2);
         public static float InOutSine(float t) => -(Mathf.Cos(Mathf.PI * t) - 1) / 2;

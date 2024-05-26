@@ -8,8 +8,8 @@ namespace HietakissaUtils.CameraShake
         public static CameraShaker Instance;
 
         [SerializeField] Transform shakeTransform;
-        [SerializeField] bool is2D;
         [SerializeField] bool isMaster;
+        [SerializeField] bool is2D;
 
         List<CameraShake> shakes = new List<CameraShake>();
 
@@ -42,7 +42,6 @@ namespace HietakissaUtils.CameraShake
                 if (shake.IsFinished) shakes.RemoveAt(i);
             }
 
-            Debug.Log($"shakes: {shakes.Count}");
 
             for (int i = 0; i < CameraShakeSource.Instances.Count; i++)
             {
