@@ -2,6 +2,7 @@ namespace HietakissaUtils.CameraShake
 {
     using System.Collections.Generic;
     using UnityEngine;
+    using System;
 
     public class CameraShaker : MonoBehaviour
     {
@@ -12,6 +13,9 @@ namespace HietakissaUtils.CameraShake
         [SerializeField] bool is2D;
 
         List<CameraShake> shakes = new List<CameraShake>();
+
+        public event Action OnBeforeShake;
+        public event Action OnAfterShake;
 
 
         void Awake()
@@ -29,6 +33,7 @@ namespace HietakissaUtils.CameraShake
         {
             if (!shakeTransform) return;
 
+            OnBeforeShake?.Invoke();
 
             Vector3 totalDisplacement = Vector3.zero;
             for (int i = shakes.Count - 1; i >= 0; i--)
@@ -61,6 +66,8 @@ namespace HietakissaUtils.CameraShake
 
             if (is2D) shakeTransform.SetLocalPositionAndRotation(totalDisplacement.SetZ(0f), Quaternion.Euler(Vector3.Scale(totalDisplacement, Vector3.forward * 5f)));
             else shakeTransform.localRotation = Quaternion.Euler(new Vector3(totalDisplacement.y, totalDisplacement.x, totalDisplacement.z));
+
+            OnAfterShake?.Invoke();
         }
 
 
