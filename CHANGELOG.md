@@ -5,6 +5,23 @@
 - Console/Command System Rework
 
 
+## [1.3.5] - 7.6.2024
+
+### Changed
+
+- QOL.Quit(), now also handles WebGL
+- QOL.GetWaitForSeconds/QOL.GetUnscaledWaitForSeconds replaced with QOL.WaitForSeconds and QOL.UnscaledWaitForSeconds classes respectively. Can now get the size of each cache
+
+### Added
+
+- SoundContainer.GetClip(), gets the next SoundClip based on the mode
+
+### Fixed
+
+- SoundContainer now serializes properly in builds
+- SoundContainer now applies the mixer properly
+
+
 
 ## [1.3.4] - 26.05.2024
 
@@ -42,6 +59,10 @@
 - HKPhysicsSimTool now has proper playback options, configurable ticks per keyframe and full support for ProBuilder and MeshColliders. WIP
 - LootTable, now found in HietakissaUtils.LootTable, way better performance with better runtime usability
 
+### Changed
+
+- ConditionalField attribute now accepts Enums
+- DestroyChildren extension methods also work with GameObjects, also added DestroyChildrenAuto to automatically use the correct destroy method
 
 ### Added
 
@@ -58,8 +79,3 @@
 ### Removed
 
 - Vector2/3.Average functions
-
-### Changed
-
-- ConditionalField attribute now accepts Enums
-- DestroyChildren extension methods also work with GameObjects, also added DestroyChildrenAuto to automatically use the correct destroy method

@@ -1405,25 +1405,6 @@ namespace HietakissaUtils
                 GUIUtility.systemCopyBuffer = text;
             }
 
-
-            static Dictionary<float, WaitForSeconds> waitDictionary = new Dictionary<float, WaitForSeconds>();
-            static WaitForSeconds waitCache;
-            public static WaitForSeconds GetWaitForSeconds(float time)
-            {
-                if (waitDictionary.TryGetValue(time, out waitCache)) return waitCache;
-                return waitDictionary[time] = new WaitForSeconds(time);
-            }
-            public static void PurgeWaitCache() => waitDictionary.Clear();
-
-            static Dictionary<float, WaitForSecondsRealtime> unscaledWaitDictionary = new Dictionary<float, WaitForSecondsRealtime>();
-            static WaitForSecondsRealtime unscaledWaitCache;
-            public static WaitForSecondsRealtime GetUnscaledWaitForSeconds(float time)
-            {
-                if (unscaledWaitDictionary.TryGetValue(time, out unscaledWaitCache)) return unscaledWaitCache;
-                return unscaledWaitDictionary[time] = new WaitForSecondsRealtime(time);
-            }
-            public static void PurgeUnscaledWaitCache() => unscaledWaitDictionary.Clear();
-
             public static void Destroy(GameObject go)
             {
 #if UNITY_EDITOR
@@ -1435,11 +1416,39 @@ namespace HietakissaUtils
             }
             public static void Quit()
             {
-#if UNITY_EDITOR
+#if UNITY_WEBGL
+                Debug.Log("WebGL Quit, ignored to not freeze the application.");
+#elif UNITY_EDITOR
                 EditorApplication.ExitPlaymode();
 #else
                 Application.Quit();
 #endif
+            }
+
+            public static WaitForSecondsCache WaitForSeconds = new WaitForSecondsCache();
+            public sealed class WaitForSecondsCache
+            {
+                Dictionary<float, WaitForSeconds> waitDictionary = new Dictionary<float, WaitForSeconds>();
+                public WaitForSeconds Get(float time)
+                {
+                    if (waitDictionary.TryGetValue(time, out WaitForSeconds waitCache)) return waitCache;
+                    return waitDictionary[time] = new WaitForSeconds(time);
+                }
+                public void PurgeCache() => waitDictionary.Clear();
+                public int GetCacheSize() => waitDictionary.Count;
+            }
+
+            public static UnscaledWaitForSecondsCache UnscaledWaitForSeconds = new UnscaledWaitForSecondsCache();
+            public sealed class UnscaledWaitForSecondsCache
+            {
+                Dictionary<float, WaitForSecondsRealtime> waitDictionary = new Dictionary<float, WaitForSecondsRealtime>();
+                public WaitForSecondsRealtime Get(float time)
+                {
+                    if (waitDictionary.TryGetValue(time, out WaitForSecondsRealtime unscaledWaitCache)) return unscaledWaitCache;
+                    return waitDictionary[time] = new WaitForSecondsRealtime(time);
+                }
+                public void PurgeCache() => waitDictionary.Clear();
+                public int GetCacheSize() => waitDictionary.Count;
             }
 
 #if !UNITY_EDITOR && HK_LOG_OFF

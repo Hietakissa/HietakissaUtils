@@ -1,6 +1,6 @@
 {
     "name": "hk.HietakissaUtils.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "HietakissaUtils",
     "references": [
         "GUID:bace7f10ae37e384c9b82e2b7ecf4706"
     ],

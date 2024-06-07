@@ -18,17 +18,17 @@ namespace HietakissaUtils
         public Vector2 PitchRange => pitchRange;
         [SerializeField][MinMaxRange(-3f, 3f, true)] Vector2 pitchRange = new Vector2(1f, 1f);
 
-        public SoundClip[] Sounds => sounds;
-        [SerializeField] SoundClip[] sounds;
+        public SoundClip[] Clips => clips;
+        [SerializeField] SoundClip[] clips;
 
-        List<int> shuffleIndexList = new List<int>();
+        [SerializeField] [HideInInspector] List<int> shuffleIndexList = new List<int>();
         int lastIndex = -1;
 
 
 #if UNITY_EDITOR
         void OnValidate()
         {
-            foreach (SoundClip sound in sounds)
+            foreach (SoundClip sound in clips)
             {
                 if (!sound._HasBeenManuallySet) sound.SetDefaults();
                 if (sound.Clip && sound._Name == "") sound.SetName();
@@ -36,10 +36,10 @@ namespace HietakissaUtils
                 sound.CalculateActualPitchAndVolume(pitchRange, volumeRange);
             }
 
-            if (shuffleIndexList.Count != sounds.Length)
+            if (shuffleIndexList.Count != clips.Length)
             {
                 shuffleIndexList.Clear();
-                for (int i = 0; i < sounds.Length; i++) shuffleIndexList.Add(i);
+                for (int i = 0; i < clips.Length; i++) shuffleIndexList.Add(i);
 
                 if (shuffleIndexList.Count == 0) shuffleIndexList.Add(0);
                 shuffleIndexList.Shuffle();
@@ -55,7 +55,7 @@ namespace HietakissaUtils
 
         [SerializeField]
         [Button(nameof(PreviewIndex), "Preview Selected", 40f)] bool _previewIndexButton;
-        [SerializeField] [DynamicRange(nameof(sounds), DynamicRangeAttribute.DynamicRangeType.ArrayLength, true)] float _selectedClip;
+        [SerializeField] [DynamicRange(nameof(clips), DynamicRangeAttribute.DynamicRangeType.ArrayLength, true)] float _selectedClip;
 
         static AudioSource previewSource;
 
@@ -73,7 +73,7 @@ namespace HietakissaUtils
 
             if (!previewSource) previewSource = EditorUtility.CreateGameObjectWithHideFlags("HK Sound Container Preview", HideFlags.HideAndDontSave, typeof(AudioSource)).GetComponent<AudioSource>();
 
-            SoundClip clip = sounds[_selectedClip.RoundToNearest()];
+            SoundClip clip = clips[_selectedClip.RoundToNearest()];
             if (clip == null) return;
 
             ApplyClipToAudioSource(previewSource, clip);
@@ -97,11 +97,13 @@ namespace HietakissaUtils
 #endif
 
 
-        public void ApplyToAudioSource(AudioSource source) => ApplyClipToAudioSource(source, sounds[GetSoundIndex()]);
+        public void ApplyToAudioSource(AudioSource source) => ApplyClipToAudioSource(source, clips[GetSoundIndex()]);
 
         public void ApplyClipToAudioSource(AudioSource source, SoundClip soundClip)
         {
-            source.outputAudioMixerGroup = soundClip.OverrideMixer ?? DefaultMixer;
+            if (soundClip.OverrideMixer == null) source.outputAudioMixerGroup = DefaultMixer;
+            else source.outputAudioMixerGroup = soundClip.OverrideMixer;
+
             source.clip = soundClip.Clip;
             source.volume = Random.Range(soundClip.ActualVolumeRange.x, soundClip.ActualVolumeRange.y);
             source.pitch = Random.Range(soundClip.ActualPitchRange.x, soundClip.ActualPitchRange.y);
@@ -109,13 +111,14 @@ namespace HietakissaUtils
             source.loop = soundClip.Loop;
         }
 
+        public SoundClip GetClip() => clips[GetSoundIndex()];
         public int GetSoundIndex()
         {
             switch (Mode)
             {
                 default: return 0;
 
-                case SoundPlayMode.Random: return Random.Range(0, sounds.Length);
+                case SoundPlayMode.Random: return Random.Range(0, clips.Length);
 
                 case SoundPlayMode.Shuffle:
 
@@ -127,13 +130,13 @@ namespace HietakissaUtils
                 case SoundPlayMode.Sequential:
 
                     lastIndex++;
-                    lastIndex %= sounds.Length;
+                    lastIndex %= clips.Length;
                     return lastIndex;
 
                 case SoundPlayMode.All:
 
                     lastIndex++;
-                    lastIndex %= sounds.Length;
+                    lastIndex %= clips.Length;
                     return lastIndex;
             }
         }
@@ -164,8 +167,8 @@ namespace HietakissaUtils
             //ActualPitchRange = (basePitchVariation + pitchRange) * 0.5f;
             //ActualVolumeRange = (baseVolumeVariation + volumeRange) * 0.5f;
 
-            ActualPitchRange = basePitchVariation * pitchRange;
-            ActualVolumeRange = baseVolumeVariation * volumeRange;
+            actualPitchRange = basePitchVariation * pitchRange;
+            actualVolumeRange = baseVolumeVariation * volumeRange;
         }
 #endif
 
@@ -193,8 +196,10 @@ namespace HietakissaUtils
         [SerializeField] SoundContainer[] next;
 
 
-        public Vector2 ActualVolumeRange { get; private set; }
-        public Vector2 ActualPitchRange { get; private set; }
+        public Vector2 ActualVolumeRange => actualVolumeRange;
+        [SerializeField][HideInInspector] Vector2 actualVolumeRange;
+        public Vector2 ActualPitchRange => actualPitchRange;
+        [SerializeField][HideInInspector] Vector2 actualPitchRange;
     }
 
     public enum SoundPlayMode

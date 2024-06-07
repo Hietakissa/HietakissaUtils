@@ -31,14 +31,14 @@ public class DynamicRangeDrawer : PropertyDrawer
         {
             property.intValue = Mathf.Clamp(property.intValue, 0, maxIndex);
 
-            if (rangeAttribute.ShouldDisplayName) EditorGUI.PrefixLabel(position, new GUIContent($"Selected: {collectionProperty.GetArrayElementAtIndex(property.intValue).displayName}"));
+            if (rangeAttribute.ShouldDisplayName) EditorGUI.LabelField(position, new GUIContent($"Selected: {collectionProperty.GetArrayElementAtIndex(property.intValue).displayName}"));
             EditorGUILayout.IntSlider(property, 0, maxIndex);
         }
         else if (property.propertyType == SerializedPropertyType.Float)
         {
             property.floatValue = Mathf.Clamp(property.floatValue, 0, maxIndex);
 
-            if (rangeAttribute.ShouldDisplayName) EditorGUI.PrefixLabel(position, new GUIContent($"Selected: {collectionProperty.GetArrayElementAtIndex(property.floatValue.RoundToNearest()).displayName}"));
+            if (rangeAttribute.ShouldDisplayName) EditorGUI.LabelField(position, new GUIContent($"Selected: {collectionProperty.GetArrayElementAtIndex(property.floatValue.RoundToNearest()).displayName}"));
             EditorGUILayout.Slider(property, 0, maxIndex);
         }
         else EditorGUILayout.HelpBox("DynamicRange attribute is only valid on Int and Float.", MessageType.Error);
