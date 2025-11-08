@@ -493,7 +493,7 @@ public class ConsoleController : MonoBehaviour
 
         float scrollPercentage;
         if (selectionIndex <= 4 || matches.Count <= 5) scrollPercentage = 1;
-        else scrollPercentage = Maf.FlipOne((selectionIndex - 4) / (float)(matches.Count - 5));
+        else scrollPercentage = Maf.OneMinus((selectionIndex - 4) / (float)(matches.Count - 5));
 
         commandPreviewScroll.value = scrollPercentage;
     }

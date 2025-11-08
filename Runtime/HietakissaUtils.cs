@@ -97,9 +97,9 @@ namespace HietakissaUtils
         public static Vector3 AddY(this Vector3 vector, float add) => vector.SetY(vector.y + add);
         public static Vector3 AddZ(this Vector3 vector, float add) => vector.SetZ(vector.z + add);
 
-        public static Vector3 SubtX(this Vector3 vector, float sub) => vector.SetX(vector.x - sub);
-        public static Vector3 SubtY(this Vector3 vector, float sub) => vector.SetY(vector.y - sub);
-        public static Vector3 SubtZ(this Vector3 vector, float sub) => vector.SetZ(vector.z - sub);
+        public static Vector3 SubX(this Vector3 vector, float sub) => vector.SetX(vector.x - sub);
+        public static Vector3 SubY(this Vector3 vector, float sub) => vector.SetY(vector.y - sub);
+        public static Vector3 SubZ(this Vector3 vector, float sub) => vector.SetZ(vector.z - sub);
         #endregion
         #endregion
         #region Float Extensions
@@ -111,7 +111,7 @@ namespace HietakissaUtils
 
         public static float Abs(this float absFloat) => Mathf.Abs(absFloat);
 
-        public static float FlipOne(this float num) => Maf.FlipOne(num);
+        public static float OneMinus(this float num) => Maf.OneMinus(num);
         #endregion
         #region String Extensions
         public static string AddInFrontOfMatches(this string text, string textToAdd, params string[] matches)
@@ -370,9 +370,9 @@ namespace HietakissaUtils
             float t = Mathf.InverseLerp(iMin, iMax, value);
             return Mathf.Lerp(oMin, oMax, t);
         }
-        public static float FlipOne(float num)
+        public static float OneMinus(float num)
         {
-            return Mathf.Abs(1f - num);
+            return 1f - num;
         }
 
         public static Vector3 QuaternionToEuler(Quaternion quaternion)
@@ -383,7 +383,7 @@ namespace HietakissaUtils
         public static Quaternion EulerToQuaternion(float x, float y, float z) => Quaternion.Euler(x, y, z);
 
         public static bool RandomBool(int percentage) => Random.Range(0, 100) < percentage;
-        public static bool RandomBool(float percentage) => Random.Range(0f, 1f) <= percentage * 0.01f;
+        public static bool RandomBool(float percentage) => Random.Range(0f, 100f) <= percentage;
 
         public static Quaternion GetRandomRotation() => Quaternion.Euler(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
         public static Vector3 GetRandomDirection() => Random.insideUnitSphere.normalized;
@@ -524,6 +524,46 @@ namespace HietakissaUtils
             else return n1 * (t -= 2.625f / d1) * t + 0.984375f;
         }
         public static float InOutBounce(float t) => (t < 0.5) ? ((1 - OutBounce(1 - 2 * t)) / 2) : ((1 + OutBounce(2 * t - 1)) / 2);
+
+
+        public static float EvaluateEasingFunction(float t, EasingMode mode)
+        {
+            return mode switch
+            {
+                EasingMode.Linear => t,
+                EasingMode.EaseInSine => InSine(t),
+                EasingMode.EaseOutSine => OutSine(t),
+                EasingMode.EaseInOutSine => InOutSine(t),
+                EasingMode.EaseInQuad => InQuad(t),
+                EasingMode.EaseOutQuad => OutQuad(t),
+                EasingMode.EaseInOutQuad => InOutQuad(t),
+                EasingMode.EaseInCubic => InCubic(t),
+                EasingMode.EaseOutCubic => OutCubic(t),
+                EasingMode.EaseInOutCubic => InOutCubic(t),
+                EasingMode.EaseInQuart => InQuart(t),
+                EasingMode.EaseOutQuart => OutQuart(t),
+                EasingMode.EaseInOutQuart => InOutQuart(t),
+                EasingMode.EaseInQuint => InQuint(t),
+                EasingMode.EaseOutQuint => OutQuint(t),
+                EasingMode.EaseInOutQuint => InOutQuint(t),
+                EasingMode.EaseInCirc => InCirc(t),
+                EasingMode.EaseOutCirc => OutCirc(t),
+                EasingMode.EaseInOutCirc => InOutCirc(t),
+                EasingMode.EaseInExpo => InExpo(t),
+                EasingMode.EaseOutExpo => OutExpo(t),
+                EasingMode.EaseInOutExpo => InOutExpo(t),
+                EasingMode.EaseInBack => InBack(t),
+                EasingMode.EaseOutBack => OutBack(t),
+                EasingMode.EaseInOutBack => InOutBack(t),
+                EasingMode.EaseInElastic => InElastic(t),
+                EasingMode.EaseOutElastic => OutElastic(t),
+                EasingMode.EaseInOutElastic => InOutElastic(t),
+                EasingMode.EaseInBounce => InBounce(t),
+                EasingMode.EaseOutBounce => OutBounce(t),
+                EasingMode.EaseInOutBounce => InOutBounce(t),
+                _ => t
+            };
+        }
     }
 
     public static class ControlRebinding
@@ -928,69 +968,68 @@ namespace HietakissaUtils
     namespace Ticker
     {
         [DefaultExecutionOrder(-50)]
-        class HKTickCaller : MonoBehaviour
+        class TickManager : MonoBehaviour
         {
-            void Update() => HKTicker.UpdateTickers(Time.deltaTime);
+            void Update() => Ticker.UpdateTickers(Time.deltaTime);
         }
 
         class TickerCollection
         {
-            public HKTicker[] Tickers { get; private set; }
-            float max;
+            internal Ticker[] Tickers { get; private set; }
+            float maxTime;
             int index;
 
             internal TickerCollection(float max, int batches)
             {
                 batches = Mathf.Max(1, batches); // Min 1 batch to not cause divide by 0 error
                 float timeOffset = 1f / batches; // 5 batch -> 1 / 5 -> 0.2 -> 0, 0.2, 0.4, 0.6, 0.8
-                this.max = max;
+                this.maxTime = max;
 
-                Tickers = new HKTicker[batches];
+                Tickers = new Ticker[batches];
                 for (int i = 0; i < batches; i++)
                 {
-                    Tickers[i] = new HKTicker(i * timeOffset * max);
+                    Tickers[i] = new Ticker(i * timeOffset * max);
                 }
             }
 
-            public void Update(float deltaTime)
+            internal void Update(float deltaTime)
             {
                 for (int i = 0; i < Tickers.Length; i++)
                 {
-                    Tickers[i].Update(deltaTime, max);
+                    Tickers[i].Update(deltaTime, maxTime);
                 }
             }
 
-            public HKTicker GetTicker()
+            internal Ticker GetTicker()
             {
-                HKTicker ticker = Tickers[index];
+                Ticker ticker = Tickers[index];
                 index++;
                 index %= Tickers.Length;
                 return ticker;
             }
         }
 
-        public class HKTicker
+        public class Ticker
         {
-            static Dictionary<float, TickerCollection> tickers = new Dictionary<float, TickerCollection>();
-            public static int Batches = 3;
+            static Dictionary<TickerID, TickerCollection> tickers = new Dictionary<TickerID, TickerCollection>();
+            public static int DefaultBatches = 3;
 
+            public event Action OnTick;
+            float time;
 
-            internal HKTicker(float time) => this.time = time;
+            internal Ticker(float time) => this.time = time;
 
 
             [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
             static void Initialize()
             {
                 tickers.Clear();
-                //Debug.Log($"Cleared tickers.");
 
-                GameObject tickCaller = new GameObject("[HK Ticker]", typeof(HKTickCaller));
+                GameObject tickCaller = new GameObject("[HK Ticker]", typeof(TickManager));
                 GameObject.DontDestroyOnLoad(tickCaller);
-                //Debug.Log($"Created tick caller.");
             }
 
-
-            public static void UpdateTickers(float deltaTime)
+            internal static void UpdateTickers(float deltaTime)
             {
                 foreach (TickerCollection ticker in tickers.Values)
                 {
@@ -998,29 +1037,41 @@ namespace HietakissaUtils
                 }
             }
 
-            public static HKTicker GetTicker(float delay)
+            public static Ticker Get(float delay, int id = 0) => Internal_GetTicker(delay, id, DefaultBatches);
+            public static Ticker Get(float delay, int id, int batches) => Internal_GetTicker(delay, id, batches);
+            static Ticker Internal_GetTicker(float delay, int id, int batches)
             {
-                if (tickers.TryGetValue(delay, out TickerCollection ticker)) return ticker.GetTicker();
+                TickerID tickerID = new TickerID(delay, id);
+                if (tickers.TryGetValue(tickerID, out TickerCollection ticker)) return ticker.GetTicker();
                 else
                 {
-                    TickerCollection tickerCollection = new TickerCollection(delay, Batches);
-                    tickers[delay] = tickerCollection;
+                    TickerCollection tickerCollection = new TickerCollection(delay, batches);
+                    tickers[tickerID] = tickerCollection;
                     return tickerCollection.GetTicker();
                 }
             }
+            
 
-
-            public event Action OnTick;
-            float time;
-
-            public void Update(float deltaTime, float max)
+            internal void Update(float deltaTime, float max)
             {
                 time += deltaTime;
-                if (time >= max)
+                while (time >= max)
                 {
                     time -= max;
                     OnTick?.Invoke();
                 }
+            }
+        }
+
+        internal struct TickerID
+        {
+            public readonly float Length;
+            public readonly int ID;
+
+            public TickerID(float length, int id)
+            {
+                Length = length;
+                ID = id;
             }
         }
     }
@@ -1031,7 +1082,11 @@ namespace HietakissaUtils
 
         public static class Serializer
         {
+#if UNITY_EDITOR || PLATFORM_STANDALONE_WIN
+            public static string SAVEDATA_FOLDER => Path.Combine(PreferLocalPath ? Application.dataPath : Application.persistentDataPath, "SaveData");
+#else
             public static string SAVEDATA_FOLDER = Path.Combine(Application.persistentDataPath, "SaveData");
+#endif
             const string SAVE_FOLDER_TEMPLATE = "Save_";
             const string FILE_EXTENSION = ".SAVE";
 
@@ -1039,7 +1094,7 @@ namespace HietakissaUtils
 
             public static SerializationType SerializationType = SerializationType.JSONFormatted;
             public static int CurrentSaveID = 1;
-
+            public static bool PreferLocalPath = true;
 
             #region Saving
             public static void SaveGlobal<TSaveType>(TSaveType saveData, string saveKey, string subFolder = EMPTY_STRING)
@@ -1247,15 +1302,30 @@ namespace HietakissaUtils
                 string directory = GetDirectoryFromSaveID(saveID);
                 if (Directory.Exists(directory)) Directory.Delete(directory, true);
             }
-
-            public static void ClearGlobalSaveData(string saveKey, string subFolder)
+            public static void ClearAllSaves()
             {
-                string filePath = GetTotalPath(saveKey, GetGlobalSaveDirectory(subFolder));
-                if (File.Exists(filePath)) File.Delete(filePath);
+                string[] directories = Directory.GetDirectories(SAVEDATA_FOLDER);
+                for (int i = 0; i < directories.Length; i++) Directory.Delete(directories[i], true);
             }
-            public static void ClearSaveData(string saveKey, string subFolder)
+            public static void ClearAllSaveData()
+            {
+                string[] directories = Directory.GetDirectories(GetDirectoryFromSaveID(CurrentSaveID));
+                for (int i = 0; i < directories.Length; i++) Directory.Delete(directories[i], true);
+            }
+            public static void ClearAllGlobalSaveData()
+            {
+                string[] directories = Directory.GetDirectories(GetGlobalSaveDirectory(""));
+                for (int i = 0; i < directories.Length; i++) Directory.Delete(directories[i], true);
+            }
+
+            public static void ClearSaveData(string saveKey, string subFolder = "")
             {
                 string filePath = GetTotalPath(saveKey, GetSaveDirectory(subFolder));
+                if (File.Exists(filePath)) File.Delete(filePath);
+            }
+            public static void ClearGlobalSaveData(string saveKey, string subFolder = "")
+            {
+                string filePath = GetTotalPath(saveKey, GetGlobalSaveDirectory(subFolder));
                 if (File.Exists(filePath)) File.Delete(filePath);
             }
             #endregion
@@ -1307,9 +1377,10 @@ namespace HietakissaUtils
             }
         }
 
+        [Serializable]
         public class DebugCommand : DebugCommandBase
         {
-            Action command;
+            public Action command;
 
             public DebugCommand(string commandName, Action command, bool hidden = false) : base(commandName, hidden)
             {
@@ -1383,6 +1454,34 @@ namespace HietakissaUtils
         {
 
         }
+
+
+        public abstract class TypeParser<T>
+        {
+            public abstract bool TryParse(string input, out T result);
+        }
+
+        public class IntParser : TypeParser<int>
+        {
+            public override bool TryParse(string input, out int result)
+            {
+                return int.TryParse(input, out result);
+            }
+        }
+
+        public class BoolParser : TypeParser<bool>
+        {
+            public override bool TryParse(string input, out bool result)
+            {
+                if (int.TryParse(input, out int i))
+                {
+                    result = i == 1 ? true : false;
+                }
+                else result = false;
+
+                return result;
+            }
+        }
     }
 
     namespace QOL
@@ -1414,12 +1513,21 @@ namespace HietakissaUtils
                 GameObject.Destroy(go);
 #endif
             }
+            public static void Destroy(UnityEngine.Object obj)
+            {
+#if UNITY_EDITOR
+                if (Application.isPlaying) UnityEngine.Object.Destroy(obj);
+                else UnityEngine.Object.DestroyImmediate(obj);
+#else
+                UnityEngine.Object.Destroy(obj);
+#endif
+            }
             public static void Quit()
             {
-#if UNITY_WEBGL
-                Debug.Log("WebGL Quit, ignored to not freeze the application.");
-#elif UNITY_EDITOR
+#if UNITY_EDITOR
                 EditorApplication.ExitPlaymode();
+#elif UNITY_WEBGL
+                Debug.Log("WebGL Quit, ignored to not freeze the application.");
 #else
                 Application.Quit();
 #endif

@@ -7,7 +7,10 @@ using UnityEditor;
 namespace HietakissaUtils
 {
     [System.Serializable]
-    public class SceneReference : ISerializationCallbackReceiver
+    public class SceneReference
+#if UNITY_EDITOR
+        : ISerializationCallbackReceiver
+#endif
     {
 #if UNITY_EDITOR
         [SerializeField] Object sceneAsset = null;
@@ -21,7 +24,7 @@ namespace HietakissaUtils
         }
 #endif
 
-        string scenePath = string.Empty;
+        [SerializeField] [HideInInspector] string scenePath = string.Empty;
 
         public string ScenePath
         {
@@ -47,27 +50,21 @@ namespace HietakissaUtils
             return sceneReference.ScenePath;
         }
 
+#if UNITY_EDITOR
         public void OnBeforeSerialize()
         {
-#if UNITY_EDITOR
             HandleBeforeSerialize();
-#endif
         }
 
         public void OnAfterDeserialize()
         {
-#if UNITY_EDITOR
             EditorApplication.update += HandleAfterDeserialize;
-#endif
         }
 
 
-
-#if UNITY_EDITOR
         SceneAsset GetSceneAssetFromPath()
         {
             if (string.IsNullOrEmpty(scenePath)) return null;
-
             return AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
         }
 
@@ -81,6 +78,7 @@ namespace HietakissaUtils
         {
             if (IsValidSceneAsset == false && string.IsNullOrEmpty(scenePath) == false)
             {
+                // We have the scene path, but no asset > get asset from path
                 sceneAsset = GetSceneAssetFromPath();
                 if (sceneAsset == null) scenePath = string.Empty;
 

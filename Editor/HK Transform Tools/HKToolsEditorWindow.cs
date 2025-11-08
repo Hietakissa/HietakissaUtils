@@ -22,6 +22,7 @@ namespace HietakissaUtils.Tools
         public static void OpenWindow()
         {
             HKToolsEditorWindow wnd = GetWindow<HKToolsEditorWindow>();
+            wnd.titleContent = new GUIContent("HK Tools");
         }
 
         void Initialize()

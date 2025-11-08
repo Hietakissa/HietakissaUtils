@@ -9,5 +9,12 @@
     },
     "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.2.1"
-    }
+    },
+    "samples": [
+        {
+            "displayName": "Prototyping",
+            "description": "Includes a simple scene useful for prototyping and testing.",
+            "path": "Samples~/Prototyping"
+        }
+    ]
 }

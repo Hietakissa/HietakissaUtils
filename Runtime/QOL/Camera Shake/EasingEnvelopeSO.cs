@@ -16,7 +16,7 @@ namespace HietakissaUtils.CameraShake
             t = Mathf.Clamp01(t);
             if (invertX) t = 1f - t;
 
-            float result = mode switch
+            /*float result = mode switch
             {
                 Easing.EasingMode.Linear => t,
                 Easing.EasingMode.EaseInSine => Easing.InSine(t),
@@ -50,7 +50,8 @@ namespace HietakissaUtils.CameraShake
                 Easing.EasingMode.EaseOutBounce => Easing.OutBounce(t),
                 Easing.EasingMode.EaseInOutBounce => Easing.InOutBounce(t),
                 _ => t
-            };
+            };*/
+            float result = Easing.EvaluateEasingFunction(t, mode);
 
             if (invertY) return 1f - result;
             else return result;
