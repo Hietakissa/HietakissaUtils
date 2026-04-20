@@ -16,7 +16,7 @@
 * Serializer.ClearSaveData and Serializer.ClearGlobalSaveData no longer require a sub folder to be specified
 * Renamed Maf.FlipOne and float.FlipOne to OneMinus
 * Maf.RandomBool(int) and (float) now both expect a value in the range (0,100)
-* Moved prototyping asses to a sample, so they can actually be properly used
+* Moved prototyping assets to a sample, so they can actually be properly used
 
 ### Added
 

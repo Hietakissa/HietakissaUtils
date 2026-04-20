@@ -337,6 +337,8 @@ namespace HietakissaUtils
         public static float GetRandomInRange(this Vector2 vector2) => Random.Range(vector2.x, vector2.y);
 
         public static float GetMaxClipLength(this AudioSource source) => source.clip ? source.clip.length / Mathf.Abs(source.pitch) : 0f;
+
+        public static Color WithAlpha(this Color color, float alpha) => new Color(color.r, color.g, color.b, alpha);
     }
 
     public abstract class Maf
