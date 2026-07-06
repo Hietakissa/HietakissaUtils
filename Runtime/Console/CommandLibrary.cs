@@ -88,7 +88,7 @@ namespace HietakissaUtils.Console
 
         public static bool HasInstanceForCommand(Command command)
         {
-            return command.IsInstanceCommand && instanceDict.TryGetValue(command.InstanceType, out List<object> instances) && instances.Count > 0;
+            return !command.IsInstanceCommand || (instanceDict.TryGetValue(command.InstanceType, out List<object> instances) && instances.Count > 0);
         }
 
         static void CreateAndRegisterCommand(MethodInfo method, CommandAttribute attr, Type enclosingType)

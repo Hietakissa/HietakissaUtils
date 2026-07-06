@@ -1,5 +1,3 @@
-using Google.Protobuf.WellKnownTypes;
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -14,13 +12,6 @@ namespace HietakissaUtils.Console
         Events that any UI frontend can listen to
         public static event Action<LogEntry> OnLogAdded;
         public static event Action OnLogsCleared;
-
-        // Data queries for your autocomplete layout
-        public static List<string> GetSuggestions(string input) { ... }
-        public static CommandInfo GetCommandInfo(string commandName) { ... }
-    
-        // Execution
-        public static void ExecuteCommand(string rawInput) { ... }
          */
 
 
@@ -38,14 +29,10 @@ namespace HietakissaUtils.Console
 
         public static List<Command> GetCommandsForInput(string input, int num = 5)
         {
+            // Total max score 100 for a perfect match with all criteria
             const int SCORE_FOR_NAME_MATCH = 60;
             const int SCORE_FOR_PARAMETER_COUNT_MATCH = 15;
             const int SCORE_PER_PARAMETER_MATCH = 25;
-
-            // Sorting criteria (not in order):
-            // 1. Command name match with input based on levenshtein distance
-            // 2. Parameter count match
-            // 3. Parameter type match
 
             // For overloading (when executing a command based on input), we can use the following criteria to sort the commands:
             // 1. Parameter count, fewer parameters is preferred to handle cases with default parameter values
@@ -56,6 +43,7 @@ namespace HietakissaUtils.Console
             string name = args[0];
             int parameterCount = args.Length - 1;
 
+            // Score commands based on the criteria
             List<CommandScore> commandScores = new List<CommandScore>();
             foreach (Command command in CommandLibrary.Commands)
             {
@@ -90,8 +78,14 @@ namespace HietakissaUtils.Console
                 commandScores.Add(new CommandScore(command, score));
             }
 
-
-            return new List<Command>();
+            // Sort commands by score in descending order and return the top N commands
+            commandScores.Sort((a, b) => b.Score.CompareTo(a.Score));
+            List<Command> bestCommands = new List<Command>();
+            for (int i = 0; i < Math.Min(num, commandScores.Count); i++)
+            {
+                bestCommands.Add(commandScores[i].Command);
+            }
+            return bestCommands;
         }
 
 
