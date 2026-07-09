@@ -167,8 +167,6 @@ namespace HietakissaUtils.Tools
             splitView.Add(leftPage);
             splitView.Add(rightPage);
             page.Add(splitView);
-
-            CreatePromptOverlay();
         }
 
         private void RefreshGroupsUI()
@@ -330,7 +328,7 @@ namespace HietakissaUtils.Tools
                 string assetPath = AssetDatabase.GUIDToAssetPath(id.assetGUID.ToString());
                 if (!string.IsNullOrEmpty(assetPath))
                 {
-                    ShowPrompt("Unloaded Scene", $"This GameObject is in '{assetPath}'. Open the scene?",
+                    window.ShowPrompt("Unloaded Scene", $"This GameObject is in '{assetPath}'. Open the scene?",
                         "Yes", () =>
                         {
                             EditorSceneManager.OpenScene(assetPath, OpenSceneMode.Single);
@@ -357,7 +355,7 @@ namespace HietakissaUtils.Tools
                 {
                     if (currentGroup.items.Count > 0)
                     {
-                        ShowPrompt("Delete Group", $"Group '{currentGroup.groupName}' is not empty. Delete anyway?",
+                        window.ShowPrompt("Delete Group", $"Group '{currentGroup.groupName}' is not empty. Delete anyway?",
                             "Delete", () => DeleteCurrentGroup(),
                             "Cancel", null);
                     }
@@ -377,42 +375,6 @@ namespace HietakissaUtils.Tools
             SaveData();
             RefreshGroupsUI();
             RefreshItemsUI();
-        }
-
-        // --- PROMPT OVERLAY ---
-        private void CreatePromptOverlay()
-        {
-            promptOverlay = new VisualElement();
-            promptOverlay.style.position = Position.Absolute;
-            promptOverlay.style.top = 0; promptOverlay.style.bottom = 0;
-            promptOverlay.style.left = 0; promptOverlay.style.right = 0;
-            promptOverlay.style.backgroundColor = new Color(0, 0, 0, 0.7f);
-            promptOverlay.style.alignItems = Align.Center;
-            promptOverlay.style.justifyContent = Justify.Center;
-            promptOverlay.style.display = DisplayStyle.None;
-            page.Add(promptOverlay);
-        }
-
-        private void ShowPrompt(string title, string message, string okText, Action onOk, string cancelText, Action onCancel)
-        {
-            promptOverlay.Clear();
-            promptOverlay.style.display = DisplayStyle.Flex;
-
-            VisualElement box = new VisualElement();
-            box.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f);
-            box.style.SetPaddingAll(20);
-            box.style.SetBorderAll(1, Color.black);
-
-            box.Add(new Label(title) { style = { fontSize = 16, unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 10 } });
-            box.Add(new Label(message) { style = { whiteSpace = WhiteSpace.Normal, width = 250, marginBottom = 20 } });
-
-            VisualElement btnRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
-
-            btnRow.Add(new Button(() => { promptOverlay.style.display = DisplayStyle.None; onCancel?.Invoke(); }) { text = cancelText });
-            btnRow.Add(new Button(() => { promptOverlay.style.display = DisplayStyle.None; onOk?.Invoke(); }) { text = okText });
-
-            box.Add(btnRow);
-            promptOverlay.Add(box);
         }
     }
 

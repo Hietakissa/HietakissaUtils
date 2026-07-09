@@ -14,6 +14,8 @@ namespace HietakissaUtils.Tools
         VisualElement leftPage;
         VisualElement rightPage;
 
+        VisualElement promptOverlay;
+
         public float DeltaTime { get; private set; }
         double lastTimeSinceStartup;
 
@@ -109,6 +111,44 @@ namespace HietakissaUtils.Tools
             rightPage.Clear();
             currentTool = tool;
             tool.OnEnter();
+            CreatePromptOverlay();
+        }
+
+
+
+        void CreatePromptOverlay()
+        {
+            promptOverlay = new VisualElement();
+            promptOverlay.style.position = Position.Absolute;
+            promptOverlay.style.top = 0; promptOverlay.style.bottom = 0;
+            promptOverlay.style.left = 0; promptOverlay.style.right = 0;
+            promptOverlay.style.backgroundColor = new Color(0, 0, 0, 0.7f);
+            promptOverlay.style.alignItems = Align.Center;
+            promptOverlay.style.justifyContent = Justify.Center;
+            promptOverlay.style.display = DisplayStyle.None;
+            rightPage.Add(promptOverlay);
+        }
+
+        public void ShowPrompt(string title, string message, string okText, Action onOk, string cancelText, Action onCancel)
+        {
+            promptOverlay.Clear();
+            promptOverlay.style.display = DisplayStyle.Flex;
+
+            VisualElement box = new VisualElement();
+            box.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f);
+            box.style.SetPaddingAll(20);
+            box.style.SetBorderAll(1, Color.black);
+
+            box.Add(new Label(title) { style = { fontSize = 16, unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 10 } });
+            box.Add(new Label(message) { style = { whiteSpace = WhiteSpace.Normal, width = 250, marginBottom = 20 } });
+
+            VisualElement btnRow = new VisualElement { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween } };
+
+            btnRow.Add(new Button(() => { promptOverlay.style.display = DisplayStyle.None; onCancel?.Invoke(); }) { text = cancelText });
+            btnRow.Add(new Button(() => { promptOverlay.style.display = DisplayStyle.None; onOk?.Invoke(); }) { text = okText });
+
+            box.Add(btnRow);
+            promptOverlay.Add(box);
         }
     }
 
