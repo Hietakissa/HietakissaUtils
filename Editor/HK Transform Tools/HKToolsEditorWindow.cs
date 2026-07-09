@@ -242,5 +242,12 @@ namespace HietakissaUtils.Tools
         {
             element.style.display = active ? DisplayStyle.Flex : DisplayStyle.None;
         }
+
+
+        /*
+         box.style.paddingAll = 20;
+            box.style.borderAllWidth = 1;
+            box.style.borderAllColor = Color.black;
+         */
     }
 }
