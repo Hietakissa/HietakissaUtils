@@ -7,9 +7,20 @@
 
 
 
+## \[1.3.7] - 10.7.2026
+
+### Changed
+
+* Moved attributes to their own HietakissaUtils.Attributes namespace
+
+### Added
+
+* Favorites tool for HKTool system to save assets and GameObjects as favorites for quick selection
+* HKToolsEditorWindow.ShowPrompt(...) for a ok/cancel prompt for HKTools
+
+
+
 ## \[1.3.6] - 8.11.2025
-
-
 
 ### Changed
 
