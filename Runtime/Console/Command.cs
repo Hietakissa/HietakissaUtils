@@ -32,12 +32,12 @@ namespace HietakissaUtils.Console
         public readonly string Name;
         public readonly string Description;
 
-        public MethodInfo method;
         public readonly ParameterInfo[] Parameters;
 
         public readonly Type InstanceType;
         public bool IsInstanceCommand => InstanceType != null;
 
+        MethodInfo method;
 
         public Command(string name, string description, MethodInfo method, Type instanceType = null)
         {
@@ -47,14 +47,14 @@ namespace HietakissaUtils.Console
             this.method = method;
             Parameters = method.GetParameters();
 
-            InstanceType = instanceType;
+            InstanceType = method.IsStatic ? null : instanceType;
         }
 
         public void Execute(string[] stringArgs, object instance = null)
         {
             if (IsInstanceCommand && instance == null)
             {
-                UnityEngine.Debug.LogError($"Error: Command '{Name}' requires an instance of type '{InstanceType.Name}' to execute.");
+                UnityEngine.Debug.Log($"Command Error: Command '{Name}' requires an instance of type '{InstanceType.Name}' to execute.");
                 return;
             }
 
@@ -76,13 +76,19 @@ namespace HietakissaUtils.Console
                 }
                 else
                 {
-                    UnityEngine.Debug.LogError($"Error: Missing required argument '{p.Name}'");
+                    UnityEngine.Debug.Log($"Command Error: Missing required argument '{p.Name}'");
                     return;
                 }
             }
 
             // Invoke the method. Pass null for target if it's a static method.
             // (Assuming static console commands here for simplicity)
+
+            if (processedArgs.Length != Parameters.Length)
+            {
+                UnityEngine.Debug.Log($"Command Error: Argument count mismatch for command '{Name}'. Expected {Parameters.Length}, got {processedArgs.Length}.");
+                return;
+            }
             method.Invoke(instance, processedArgs);
         }
 

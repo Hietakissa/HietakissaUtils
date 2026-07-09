@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System;
 
+using UnityEngine;
+
 namespace HietakissaUtils.Console
 {
     public static class CommandLibrary
@@ -54,6 +56,8 @@ namespace HietakissaUtils.Console
                 "hk",
             };
 
+            Commands.Clear();
+
             /// todo: nicer filtering
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (Assembly assembly in assemblies)
@@ -74,21 +78,22 @@ namespace HietakissaUtils.Console
                 Type[] types = assembly.GetTypes();
                 foreach (Type type in types)
                 {
-                    foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
+                    // Private, public, instance and static methods
+                    foreach (MethodInfo method in type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                     {
                         CommandAttribute attr = method.GetCustomAttribute<CommandAttribute>();
                         if (attr != null) CreateAndRegisterCommand(method, attr, type);
                     }
                 }
             }
-
-            //ParameterInfo test;
-            //test.
         }
 
         public static bool HasInstanceForCommand(Command command)
         {
-            return !command.IsInstanceCommand || (instanceDict.TryGetValue(command.InstanceType, out List<object> instances) && instances.Count > 0);
+            if (!command.IsInstanceCommand) return true;
+            return instanceDict.TryGetValue(command.InstanceType, out List<object> instances) && instances.Count > 0;
+
+            //return !command.IsInstanceCommand || (instanceDict.TryGetValue(command.InstanceType, out List<object> instances) && instances.Count > 0);
         }
 
         static void CreateAndRegisterCommand(MethodInfo method, CommandAttribute attr, Type enclosingType)
@@ -102,6 +107,7 @@ namespace HietakissaUtils.Console
             
             // Register the command
             Commands.Add(command);
+            Debug.Log($"Registered command: {command.Name}");
         }
     }
 }

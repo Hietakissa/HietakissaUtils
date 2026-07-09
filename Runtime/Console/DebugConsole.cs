@@ -38,6 +38,7 @@ namespace HietakissaUtils.Console
             // 1. Parameter count, fewer parameters is preferred to handle cases with default parameter values
 
             string[] args = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            //Debug.Log($"GetCommandsForInput: {input} => {args.Length} args");
             if (args.Length == 0) return new List<Command>();
 
             string name = args[0];
@@ -47,6 +48,7 @@ namespace HietakissaUtils.Console
             List<CommandScore> commandScores = new List<CommandScore>();
             foreach (Command command in CommandLibrary.Commands)
             {
+                //Debug.Log($"Has instance for command {command.Name}: {CommandLibrary.HasInstanceForCommand(command)}");
                 if (!CommandLibrary.HasInstanceForCommand(command)) continue;
                 int score = 0;
 
@@ -83,13 +85,14 @@ namespace HietakissaUtils.Console
             List<Command> bestCommands = new List<Command>();
             for (int i = 0; i < Math.Min(num, commandScores.Count); i++)
             {
+                Debug.Log($"Adding command {commandScores[i].Command.Name} with score {commandScores[i].Score}");
                 bestCommands.Add(commandScores[i].Command);
             }
             return bestCommands;
         }
 
 
-        public static void ExecuteCommand(Command command, string[] args)
+        public static void ExecuteCommand(Command command, params string[] args)
         {
             if (!CommandLibrary.HasInstanceForCommand(command)) return;
 
