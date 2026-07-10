@@ -1,16 +1,19 @@
 using UnityEngine;
 
-public class MinMaxRangeAttribute : PropertyAttribute
+namespace HietakissaUtils.Attributes
 {
-    public readonly float MinRange;
-    public readonly float MaxRange;
-
-    public readonly bool ShowValues;
-
-    public MinMaxRangeAttribute(float minRange, float maxRange, bool showValues = true)
+    public class MinMaxRangeAttribute : PropertyAttribute
     {
-        MinRange = minRange;
-        MaxRange = maxRange;
-        ShowValues = showValues;
+        public readonly float MinRange;
+        public readonly float MaxRange;
+
+        public readonly bool ShowValues;
+
+        public MinMaxRangeAttribute(float minRange, float maxRange, bool showValues = true)
+        {
+            MinRange = minRange;
+            MaxRange = maxRange;
+            ShowValues = showValues;
+        }
     }
 }

@@ -1,5 +1,7 @@
 namespace HietakissaUtils.LootTable
 {
+    using HietakissaUtils.Attributes;
+
     using System.Collections.Generic;
     using Random = System.Random;
     using UnityEngine;

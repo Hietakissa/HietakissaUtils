@@ -1,5 +1,6 @@
 namespace HietakissaUtils.CameraShake
 {
+    using HietakissaUtils.Attributes;
     using UnityEngine;
 
     [CreateAssetMenu(menuName = "HK Utils/Camera Shake/Easing Envelope", fileName = "New Easing Envelope", order = 1)]

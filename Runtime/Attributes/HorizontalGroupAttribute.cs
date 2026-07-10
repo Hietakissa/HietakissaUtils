@@ -1,11 +1,14 @@
 using UnityEngine;
 
-public class HorizontalGroupAttribute : PropertyAttribute
+namespace HietakissaUtils.Attributes
 {
-    public readonly int GroupSize;
-
-    public HorizontalGroupAttribute(int groupSize)
+    public class HorizontalGroupAttribute : PropertyAttribute
     {
-        GroupSize = groupSize;
+        public readonly int GroupSize;
+
+        public HorizontalGroupAttribute(int groupSize)
+        {
+            GroupSize = groupSize;
+        }
     }
 }

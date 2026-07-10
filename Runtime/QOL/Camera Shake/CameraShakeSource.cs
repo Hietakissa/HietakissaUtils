@@ -1,5 +1,6 @@
 namespace HietakissaUtils.CameraShake
 {
+    using HietakissaUtils.Attributes;
     using System.Collections.Generic;
     using UnityEngine;
 
