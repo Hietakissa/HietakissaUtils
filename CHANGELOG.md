@@ -3,7 +3,14 @@
 ## WIP
 
 * Complete Console/Command System Refactor
-* Simple Tweening System, HKTween
+* ?Simple Tweening System, HKTween
+
+
+## \[1.3.8] - 10.7.2026
+
+### Changed
+
+* Actually moved attributes to their own HietakissaUtils.Attributes namespace this time instead of just the drawers
 
 
 

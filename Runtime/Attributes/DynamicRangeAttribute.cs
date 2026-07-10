@@ -1,20 +1,23 @@
 using UnityEngine;
 
-public class DynamicRangeAttribute : PropertyAttribute
+namespace HietakissaUtils.Attributes
 {
-    public readonly DynamicRangeType RangeType;
-    public readonly string CollectionName;
-    public readonly bool ShouldDisplayName;
-
-    public DynamicRangeAttribute(string collectionName, DynamicRangeType rangeType = DynamicRangeType.ArrayLength, bool shouldDisplayName = false)
+    public class DynamicRangeAttribute : PropertyAttribute
     {
-        CollectionName = collectionName;
-        RangeType = rangeType;
-        ShouldDisplayName = shouldDisplayName;
-    }
+        public readonly DynamicRangeType RangeType;
+        public readonly string CollectionName;
+        public readonly bool ShouldDisplayName;
 
-    public enum DynamicRangeType
-    {
-        ArrayLength
+        public DynamicRangeAttribute(string collectionName, DynamicRangeType rangeType = DynamicRangeType.ArrayLength, bool shouldDisplayName = false)
+        {
+            CollectionName = collectionName;
+            RangeType = rangeType;
+            ShouldDisplayName = shouldDisplayName;
+        }
+
+        public enum DynamicRangeType
+        {
+            ArrayLength
+        }
     }
 }

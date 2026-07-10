@@ -1,5 +1,6 @@
 namespace HietakissaUtils.CameraShake
 {
+    using HietakissaUtils.Attributes;
     using UnityEngine;
 
     public abstract class CameraShakeSO : ScriptableObject

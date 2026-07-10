@@ -1,15 +1,18 @@
 using UnityEngine;
 
-public class ButtonAttribute : PropertyAttribute
+namespace HietakissaUtils.Attributes
 {
-    public readonly string FunctionName;
-    public readonly string OverrideName;
-    public readonly float Height;
-
-    public ButtonAttribute(string functionName, string overrideName = "", float height = 20f)
+    public class ButtonAttribute : PropertyAttribute
     {
-        FunctionName = functionName;
-        OverrideName = overrideName;
-        Height = height;
+        public readonly string FunctionName;
+        public readonly string OverrideName;
+        public readonly float Height;
+
+        public ButtonAttribute(string functionName, string overrideName = "", float height = 20f)
+        {
+            FunctionName = functionName;
+            OverrideName = overrideName;
+            Height = height;
+        }
     }
 }
