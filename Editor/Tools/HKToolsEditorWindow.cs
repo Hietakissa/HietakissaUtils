@@ -242,12 +242,13 @@ namespace HietakissaUtils.Tools
             return button;
         }
 
-        public static Toggle CreateToggle(VisualElement parent, EventCallback<ChangeEvent<bool>> callback, string toggleText = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
+        public static Toggle CreateToggle(VisualElement parent, EventCallback<ChangeEvent<bool>> callback, bool defaultValue = false, string toggleText = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
         {
             Toggle toggle = new Toggle(toggleText);
             toggle.RegisterValueChangedCallback(callback);
             toggle.style.fontSize = fontSize;
             toggle.style.flexGrow = flexGrow;
+            toggle.SetValueWithoutNotify(defaultValue);
 
             parent.Add(toggle);
             return toggle;
@@ -289,12 +290,13 @@ namespace HietakissaUtils.Tools
             return floatField;
         }
 
-        public static Slider CreateSlider(VisualElement parent, EventCallback<ChangeEvent<float>> callback, float min = 0f, float max = 1f, SliderDirection direction = SliderDirection.Horizontal, string sliderName = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
+        public static Slider CreateSlider(VisualElement parent, EventCallback<ChangeEvent<float>> callback, float min = 0f, float max = 1f, float defaultValue = 0f, SliderDirection direction = SliderDirection.Horizontal, string sliderName = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
         {
             Slider slider = new Slider(sliderName, min, max, direction);
             slider.RegisterCallback(callback);
             slider.style.fontSize = fontSize;
             slider.style.flexGrow = flexGrow;
+            slider.SetValueWithoutNotify(defaultValue);
 
             parent.Add(slider);
             return slider;

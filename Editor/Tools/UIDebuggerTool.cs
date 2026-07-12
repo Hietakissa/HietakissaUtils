@@ -35,8 +35,8 @@ namespace HietakissaUtils.Tools
         void CreateGUI()
         {
             HKToolsUtils.CreateTitle(page, this);
-            HKToolsUtils.CreateToggle(page, (value) => enabled = value.newValue, toggleText: "Enabled");
-            HKToolsUtils.CreateSlider(page, (value) => opacity = value.newValue, sliderName: "Opacity");
+            HKToolsUtils.CreateToggle(page, (value) => enabled = value.newValue, toggleText: "Enabled", defaultValue: enabled);
+            HKToolsUtils.CreateSlider(page, (value) => opacity = value.newValue, sliderName: "Opacity", defaultValue: opacity);
         }
 
         public override void OnSceneGUI(SceneView obj)
@@ -163,12 +163,15 @@ namespace HietakissaUtils.Tools
             void FindGraphicsRecursively(Transform t, List<HierarchyElement> list, bool blocked = true)
             {
                 if (t.TryGetComponent<CanvasGroup>(out CanvasGroup group) && group.ignoreParentGroups) blocked = group.blocksRaycasts;
+                bool visible = t.gameObject.activeInHierarchy;
 
-                if (blocked)
+                if (blocked && visible)
                 {
                     Graphic[] graphics = t.GetComponents<Graphic>();
                     foreach (Graphic graphic in graphics)
                     {
+                        if (!graphic.raycastTarget || !graphic.enabled) continue;
+
                         float hue = GetHueForGraphic(graphic);
                         Color fillColor = GetFillColor(hue);
                         Color outlineColor = GetOutlineColor(hue);
