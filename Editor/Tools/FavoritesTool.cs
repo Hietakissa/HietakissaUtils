@@ -56,7 +56,6 @@ namespace HietakissaUtils.Tools
 
         private VisualElement leftPage;
         private VisualElement rightPage;
-        private VisualElement promptOverlay;
 
         bool isItemsUIDirty = false;
 
@@ -257,11 +256,26 @@ namespace HietakissaUtils.Tools
             foreach (var item in currentGroup.items)
             {
                 PreviewElement preview = new PreviewElement(item);
-                preview.RegisterCallback<PointerDownEvent>(evt => SelectItem(item, preview));
-                preview.RegisterCallback<MouseDownEvent>(evt =>
+                //preview.RegisterCallback<PointerDownEvent>(evt => SelectItem(item, preview));
+                preview.RegisterCallback<PointerDownEvent>(evt =>
                 {
-                    if (evt.clickCount == 2) OpenItem(item);
+                    //bool isRightClick = (evt.pressedButtons & (1 << 1)) != 0;
+                    //Debug.Log($"PointerDownEvent: isRightClick = {isRightClick}");
+                    //if (isRightClick) OpenItem(item);
+                    if (evt.clickCount == 1)
+                    {
+                        if (currentSelectedItem != item) PingItem(item);
+                        SelectItem(item, preview);
+                    }
+                    else if (evt.clickCount == 2) OpenItem(item);
                 });
+                /*preview.RegisterCallback<MouseDownEvent>(evt =>
+                {
+                    Debug.Log("");
+                    bool isRightClick = (evt.pressedButtons & (1 << 1)) != 0;
+                    if (isRightClick) OpenItem(item);
+                    else if (evt.clickCount == 2) PingItem(item);
+                });*/
 
                 rightPage.Add(preview);
             }
@@ -311,7 +325,7 @@ namespace HietakissaUtils.Tools
             }
         }
 
-        private void OpenItem(FavoriteItem item)
+        void PingItem(FavoriteItem item)
         {
             if (!GlobalObjectId.TryParse(item.globalObjectId, out GlobalObjectId id)) return;
             Object obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id);
@@ -323,6 +337,20 @@ namespace HietakissaUtils.Tools
                 if (item.isSceneObject)
                     SceneView.FrameLastActiveSceneView();
             }
+        }
+
+        void OpenItem(FavoriteItem item)
+        {
+            if (!GlobalObjectId.TryParse(item.globalObjectId, out GlobalObjectId id)) return;
+            Object obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id);
+
+            if (obj != null)
+            {
+                AssetDatabase.OpenAsset(obj);
+                AssetDatabase.OpenAsset(obj);
+                Selection.activeObject = obj;
+                //EditorGUIUtility.PingObject(obj);
+            }
             else if (item.isSceneObject)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(id.assetGUID.ToString());
@@ -332,7 +360,7 @@ namespace HietakissaUtils.Tools
                         "Yes", () =>
                         {
                             EditorSceneManager.OpenScene(assetPath, OpenSceneMode.Single);
-                            OpenItem(item);
+                            PingItem(item);
                         },
                         "Cancel", null);
                 }
