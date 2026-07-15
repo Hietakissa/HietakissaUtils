@@ -36,6 +36,7 @@ namespace HietakissaUtils.Console
 
         public readonly Type InstanceType;
         public bool IsInstanceCommand => InstanceType != null;
+        public bool HasDescription => !string.IsNullOrEmpty(Description);
 
         MethodInfo method;
 
@@ -97,7 +98,7 @@ namespace HietakissaUtils.Console
         {
             // Smoothly converts strings to int, float, bool, enums, etc.
             var converter = TypeDescriptor.GetConverter(targetType);
-            if (converter != null && converter.CanConvertFrom(typeof(string)))
+            if (converter != null && converter.CanConvertFrom(typeof(string)) && converter.IsValid(input))
             {
                 return converter.ConvertFromString(input);
             }

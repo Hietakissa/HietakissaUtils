@@ -36,12 +36,13 @@ namespace HietakissaUtils.Console
 
             // For overloading (when executing a command based on input), we can use the following criteria to sort the commands:
             // 1. Parameter count, fewer parameters is preferred to handle cases with default parameter values
-
+            input = input.ToLower();
             string[] args = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             //Debug.Log($"GetCommandsForInput: {input} => {args.Length} args");
-            if (args.Length == 0) return new List<Command>();
+            //if (args.Length == 0) return new List<Command>();
 
-            string name = args[0];
+            //string name = args[0];
+            string name = args.Length == 0 ? input : args[0];
             int parameterCount = args.Length - 1;
 
             // Score commands based on the criteria
@@ -52,32 +53,43 @@ namespace HietakissaUtils.Console
                 if (!CommandLibrary.HasInstanceForCommand(command)) continue;
                 int score = 0;
 
+                //Debug.Log($"Evaluating score for command '{command.Name}'");
                 // 1. Command name match with input based on levenshtein distance
-                int editDistance = name.LevenshteinDistance(command.Name);
+                int editDistance = name.LevenshteinDistance(command.Name.ToLower());
                 float similarity = 1f - (float)editDistance / Math.Max(name.Length, command.Name.Length);
                 score += Mathf.FloorToInt(similarity * SCORE_FOR_NAME_MATCH);
+                //Debug.Log($"Name score: {Mathf.FloorToInt(similarity * SCORE_FOR_NAME_MATCH)}, similarity: {similarity}, edit distance: {editDistance}, max length: {Math.Max(name.Length, command.Name.Length)}");
 
-                // 2. Parameter count match
-                similarity = 1f - Mathf.Abs((float)(parameterCount - command.Parameters.Length) / Math.Max(parameterCount, command.Parameters.Length));
-                score += Mathf.FloorToInt(similarity * SCORE_FOR_PARAMETER_COUNT_MATCH);
-                //if (parameterCount == command.Parameters.Length)
-                //    score += SCORE_FOR_PARAMETER_COUNT_MATCH;
-
-                // 3. Parameter type match
-                int matches = 0;
-                for (int i = 0; i < Math.Min(parameterCount, command.Parameters.Length); i++)
+                // Only score based on parameters if the input actually has any
+                if (args.Length >= 2)
                 {
-                    string arg = args[i + 1];
-                    if (!string.IsNullOrEmpty(arg) && command.CanParseArgument(arg, command.Parameters[i].ParameterType))
+                    // 2. Parameter count match
+                    similarity = 1f - Mathf.Abs((float)(parameterCount - command.Parameters.Length) / Math.Max(parameterCount, command.Parameters.Length));
+                    score += Mathf.FloorToInt(similarity * SCORE_FOR_PARAMETER_COUNT_MATCH);
+                    //Debug.Log($"Parameter count score: {Mathf.FloorToInt(similarity * SCORE_FOR_PARAMETER_COUNT_MATCH)}, similarity: {similarity}, had {parameterCount} vs expected {command.Parameters.Length}");
+                    //if (parameterCount == command.Parameters.Length)
+                    //    score += SCORE_FOR_PARAMETER_COUNT_MATCH;
+
+                    // 3. Parameter type match
+                    int matches = 0;
+                    for (int i = 0; i < Math.Min(parameterCount, command.Parameters.Length); i++)
                     {
-                        //score += SCORE_PER_PARAMETER_MATCH;
-                        matches++;
+                        string arg = args[i + 1];
+                        if (!string.IsNullOrEmpty(arg) && command.CanParseArgument(arg, command.Parameters[i].ParameterType))
+                        {
+                            //score += SCORE_PER_PARAMETER_MATCH;
+                            matches++;
+                        }
                     }
+                    similarity = (float)matches / Math.Max(parameterCount, command.Parameters.Length);
+                    score += Mathf.FloorToInt(similarity * SCORE_PER_PARAMETER_MATCH);
+                    //Debug.Log($"Parameter type score: {Mathf.FloorToInt(similarity * SCORE_PER_PARAMETER_MATCH)}, similarity: {similarity}, types match for {matches}/{Math.Max(parameterCount, command.Parameters.Length)} parameters");
                 }
-                similarity = (float)matches / Math.Max(parameterCount, command.Parameters.Length);
-                score += Mathf.FloorToInt(similarity * SCORE_PER_PARAMETER_MATCH);
+                
 
                 commandScores.Add(new CommandScore(command, score));
+                //if (args.Length == 0) Debug.Log($"{command.Name}: Name: {Mathf.FloorToInt((1f - (float)editDistance / Math.Max(name.Length, command.Name.Length)) * SCORE_FOR_NAME_MATCH)}");
+                //else Debug.Log($"{command.Name}: Name: {Mathf.FloorToInt((1f - (float)editDistance / Math.Max(name.Length, command.Name.Length)) * SCORE_FOR_NAME_MATCH)}, Parameter count: {Mathf.FloorToInt((1f - Mathf.Abs((float)(parameterCount - command.Parameters.Length) / Math.Max(parameterCount, command.Parameters.Length))) * SCORE_FOR_PARAMETER_COUNT_MATCH)}, Parameter type: {Mathf.FloorToInt(((float)matches / Math.Max(parameterCount, command.Parameters.Length)) * SCORE_PER_PARAMETER_MATCH)}");
             }
 
             // Sort commands by score in descending order and return the top N commands
@@ -85,7 +97,7 @@ namespace HietakissaUtils.Console
             List<Command> bestCommands = new List<Command>();
             for (int i = 0; i < Math.Min(num, commandScores.Count); i++)
             {
-                Debug.Log($"Adding command {commandScores[i].Command.Name} with score {commandScores[i].Score}");
+                //Debug.Log($"Adding command {commandScores[i].Command.Name} with score {commandScores[i].Score}");
                 bestCommands.Add(commandScores[i].Command);
             }
             return bestCommands;
