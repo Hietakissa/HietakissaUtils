@@ -147,6 +147,8 @@ namespace HietakissaUtils
             return targetString.ReplaceFirst(stringToRemove, "");
         }
 
+        public static string Join(this string[] targetArray, string separator) => string.Join(separator, targetArray);
+
         public static int LevenshteinDistance(this string s1, string s2)
         {
             int m = s1.Length;

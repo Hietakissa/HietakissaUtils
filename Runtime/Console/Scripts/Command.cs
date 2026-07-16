@@ -51,6 +51,25 @@ namespace HietakissaUtils.Console
             InstanceType = method.IsStatic ? null : instanceType;
         }
 
+        public bool TryExecute(string[] stringArgs, object instance = null)
+        {
+            if (IsInstanceCommand && instance == null)
+            {
+                UnityEngine.Debug.Log($"Command Error: Command '{Name}' requires an instance of type '{InstanceType.Name}' to execute.");
+                return false;
+            }
+
+            if (TryProcessArgs(stringArgs, out object[] processedArgs))
+            {
+                method.Invoke(instance, processedArgs);
+            }
+            else
+            {
+                UnityEngine.Debug.Log($"Command Error: Invalid args '[{stringArgs.Join(", ")}]' for command '{Name}'");
+                return false;
+            }
+            return true;
+        }
         public void Execute(string[] stringArgs, object instance = null)
         {
             if (IsInstanceCommand && instance == null)
@@ -59,8 +78,15 @@ namespace HietakissaUtils.Console
                 return;
             }
 
-            object[] processedArgs = new object[Parameters.Length];
+            if (TryProcessArgs(stringArgs, out object[] processedArgs))
+                method.Invoke(instance, processedArgs);
+            else
+                UnityEngine.Debug.Log($"Command Error: Invalid args '[{stringArgs.Join(", ")}]' for command '{Name}'");
+        }
 
+        public bool TryProcessArgs(string[] stringArgs, out object[] processedArgs)
+        {
+            processedArgs = new object[Parameters.Length];
             for (int i = 0; i < Parameters.Length; i++)
             {
                 ParameterInfo p = Parameters[i];
@@ -68,32 +94,25 @@ namespace HietakissaUtils.Console
                 if (i < stringArgs.Length)
                 {
                     // Parse the string input to the target parameter type
-                    processedArgs[i] = ParseArgument(stringArgs[i], p.ParameterType);
+                    if (TryParseArgumentOfType(stringArgs[i], p.ParameterType, out object value))
+                        processedArgs[i] = value;
+                    else return false;
                 }
                 else if (p.HasDefaultValue)
                 {
                     // Fallback to default value if the user didn't supply it
                     processedArgs[i] = p.DefaultValue;
                 }
-                else
-                {
-                    UnityEngine.Debug.Log($"Command Error: Missing required argument '{p.Name}'");
-                    return;
-                }
+                else return false;
             }
-
-            // Invoke the method. Pass null for target if it's a static method.
-            // (Assuming static console commands here for simplicity)
-
-            if (processedArgs.Length != Parameters.Length)
-            {
-                UnityEngine.Debug.Log($"Command Error: Argument count mismatch for command '{Name}'. Expected {Parameters.Length}, got {processedArgs.Length}.");
-                return;
-            }
-            method.Invoke(instance, processedArgs);
+            return true;
         }
 
-        public bool CanParseArgument(string input, Type targetType) => ParseArgument(input, targetType) != null;
+        public bool TryParseArgumentOfType(string input, Type targetType, out object value)
+        {
+            value = ParseArgument(input, targetType);
+            return value != null;
+        }
         object ParseArgument(string input, Type targetType)
         {
             // Smoothly converts strings to int, float, bool, enums, etc.

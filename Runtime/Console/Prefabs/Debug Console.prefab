@@ -475,6 +475,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 739a2703239012a4086d53bf38662527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  refreshCommandLibraryOnAwake: 1
   consoleRoot: {fileID: 861815116574550838}
   inputField: {fileID: 4025863993471951415}
   commandSuggestionRoot: {fileID: 6084551432948629844}

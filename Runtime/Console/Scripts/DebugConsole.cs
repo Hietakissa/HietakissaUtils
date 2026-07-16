@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 
 using UnityEngine;
 
@@ -37,13 +39,17 @@ namespace HietakissaUtils.Console
             // For overloading (when executing a command based on input), we can use the following criteria to sort the commands:
             // 1. Parameter count, fewer parameters is preferred to handle cases with default parameter values
             input = input.ToLower();
-            string[] args = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            CommandArgs commandArgs = ParseArgs(input);
+            string[] args = commandArgs.Args;
+            
+            //string[] args = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             //Debug.Log($"GetCommandsForInput: {input} => {args.Length} args");
             //if (args.Length == 0) return new List<Command>();
 
             //string name = args[0];
-            string name = args.Length == 0 ? input : args[0];
-            int parameterCount = args.Length - 1;
+            //string name = args.Length == 0 ? input : args[0];
+            string name = commandArgs.Name;
+            int parameterCount = args.Length;
 
             // Score commands based on the criteria
             List<CommandScore> commandScores = new List<CommandScore>();
@@ -53,7 +59,7 @@ namespace HietakissaUtils.Console
                 if (!CommandLibrary.HasInstanceForCommand(command)) continue;
                 int score = 0;
 
-                //Debug.Log($"Evaluating score for command '{command.Name}'");
+                //Debug.Log($"Evaluating score for command '{command.Name}' with args: [{args.Join(", ")}]");
                 // 1. Command name match with input based on levenshtein distance
                 int editDistance = name.LevenshteinDistance(command.Name.ToLower());
                 float similarity = 1f - (float)editDistance / Math.Max(name.Length, command.Name.Length);
@@ -61,23 +67,21 @@ namespace HietakissaUtils.Console
                 //Debug.Log($"Name score: {Mathf.FloorToInt(similarity * SCORE_FOR_NAME_MATCH)}, similarity: {similarity}, edit distance: {editDistance}, max length: {Math.Max(name.Length, command.Name.Length)}");
 
                 // Only score based on parameters if the input actually has any
-                if (args.Length >= 2)
+                if (args.Length >= 1 && command.Parameters.Length >= 1)
                 {
                     // 2. Parameter count match
                     similarity = 1f - Mathf.Abs((float)(parameterCount - command.Parameters.Length) / Math.Max(parameterCount, command.Parameters.Length));
                     score += Mathf.FloorToInt(similarity * SCORE_FOR_PARAMETER_COUNT_MATCH);
                     //Debug.Log($"Parameter count score: {Mathf.FloorToInt(similarity * SCORE_FOR_PARAMETER_COUNT_MATCH)}, similarity: {similarity}, had {parameterCount} vs expected {command.Parameters.Length}");
-                    //if (parameterCount == command.Parameters.Length)
-                    //    score += SCORE_FOR_PARAMETER_COUNT_MATCH;
 
                     // 3. Parameter type match
                     int matches = 0;
                     for (int i = 0; i < Math.Min(parameterCount, command.Parameters.Length); i++)
                     {
-                        string arg = args[i + 1];
-                        if (!string.IsNullOrEmpty(arg) && command.CanParseArgument(arg, command.Parameters[i].ParameterType))
+                        string arg = args[i];
+                        //Debug.Log($"arg '{arg}' can be parsed to type {command.Parameters[i].ParameterType}: {command.TryParseArgumentOfType(arg, command.Parameters[i].ParameterType, out object v)}");
+                        if (!string.IsNullOrEmpty(arg) && command.TryParseArgumentOfType(arg, command.Parameters[i].ParameterType, out object value))
                         {
-                            //score += SCORE_PER_PARAMETER_MATCH;
                             matches++;
                         }
                     }
@@ -85,11 +89,10 @@ namespace HietakissaUtils.Console
                     score += Mathf.FloorToInt(similarity * SCORE_PER_PARAMETER_MATCH);
                     //Debug.Log($"Parameter type score: {Mathf.FloorToInt(similarity * SCORE_PER_PARAMETER_MATCH)}, similarity: {similarity}, types match for {matches}/{Math.Max(parameterCount, command.Parameters.Length)} parameters");
                 }
-                
+                else if (args.Length == command.Parameters.Length) score += SCORE_FOR_PARAMETER_COUNT_MATCH;
 
+                //Debug.Log($"Total score: {score}");
                 commandScores.Add(new CommandScore(command, score));
-                //if (args.Length == 0) Debug.Log($"{command.Name}: Name: {Mathf.FloorToInt((1f - (float)editDistance / Math.Max(name.Length, command.Name.Length)) * SCORE_FOR_NAME_MATCH)}");
-                //else Debug.Log($"{command.Name}: Name: {Mathf.FloorToInt((1f - (float)editDistance / Math.Max(name.Length, command.Name.Length)) * SCORE_FOR_NAME_MATCH)}, Parameter count: {Mathf.FloorToInt((1f - Mathf.Abs((float)(parameterCount - command.Parameters.Length) / Math.Max(parameterCount, command.Parameters.Length))) * SCORE_FOR_PARAMETER_COUNT_MATCH)}, Parameter type: {Mathf.FloorToInt(((float)matches / Math.Max(parameterCount, command.Parameters.Length)) * SCORE_PER_PARAMETER_MATCH)}");
             }
 
             // Sort commands by score in descending order and return the top N commands
@@ -110,9 +113,7 @@ namespace HietakissaUtils.Console
 
             if (command.IsInstanceCommand)
             {
-                // validate all instances
                 List<object> instances = CommandLibrary.GetInstances(command);
-                instances.RemoveAll(item => item == null || (item is UnityEngine.Object obj && !obj));
                 foreach (var instance in instances)
                 {
                     command.Execute(args, instance);
@@ -122,6 +123,101 @@ namespace HietakissaUtils.Console
             {
                 command.Execute(args);
             }
+        }
+
+        public static void ExecuteCommand(string commandName, params string[] args)
+        {
+            // 1. Get all commands that match the name exactly
+            // 2. Commands must also have at least as many arguments as the input
+            // 3. All unspecified parameters must have a default value
+
+            List<Command> validCommands = new List<Command>();
+            foreach (Command command in CommandLibrary.Commands)
+            {
+                if (command.Name.ToLower() == commandName.ToLower() && command.Parameters.Length >= args.Length) validCommands.Add(command);
+            }
+            // Sort commands in ascending order based on parameter length, commands with fewer parameters should be prioritized, since they are more strict due to default values
+            validCommands.Sort((a, b) => a.Parameters.Length.CompareTo(b.Parameters.Length));
+
+            for (int i = 0; i < validCommands.Count; i++)
+            {
+                Command command = validCommands[i];
+                if (command.IsInstanceCommand)
+                {
+                    List<object> instances = CommandLibrary.GetInstances(command);
+                    bool atLeastOneSuccess = false;
+                    foreach (var instance in instances)
+                    {
+                        if (command.TryExecute(args, instance))
+                        {
+                            atLeastOneSuccess = true;
+                        }
+                    }
+
+                    if (atLeastOneSuccess) return; // Found and executed a valid instance command
+                }
+                else if (command.TryExecute(args)) return; // Executed a valid static command
+            }
+        }
+
+
+
+        public static CommandArgs ParseArgs(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return new CommandArgs(string.Empty, Array.Empty<string>());
+            }
+
+            var tokens = new List<string>();
+            var currentToken = new StringBuilder();
+            bool inQuotes = false;
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+
+                if (c == '"')
+                {
+                    // Toggle the inQuotes flag, but don't add the quote character to the token
+                    inQuotes = !inQuotes;
+                }
+                else if (char.IsWhiteSpace(c) && !inQuotes)
+                {
+                    // If we hit whitespace outside of quotes, the current token is finished
+                    if (currentToken.Length > 0)
+                    {
+                        tokens.Add(currentToken.ToString());
+                        currentToken.Clear();
+                    }
+                }
+                else
+                {
+                    // Add the character to the current token
+                    currentToken.Append(c);
+                }
+            }
+
+            // Add the last token if there is one
+            if (currentToken.Length > 0)
+            {
+                tokens.Add(currentToken.ToString());
+            }
+
+            // Assign the first token to Name, and the rest to Args
+            return new CommandArgs(tokens.FirstOrDefault() ?? string.Empty, tokens.Skip(1).ToArray());
+        }
+    }
+
+    public class CommandArgs
+    {
+        public readonly string Name;
+        public readonly string[] Args;
+
+        public CommandArgs(string name, string[] args)
+        {
+            Name = name;
+            Args = args;
         }
     }
 

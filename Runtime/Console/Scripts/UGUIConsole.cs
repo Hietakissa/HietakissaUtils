@@ -3,16 +3,20 @@ using HietakissaUtils.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 using TMPro;
 
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HietakissaUtils.Console
 {
     public class UGUIConsole : MonoBehaviour
     {
         public static UGUIConsole Instance;
+
+        [SerializeField] bool refreshCommandLibraryOnAwake = true;
 
         [Header("References")]
         [SerializeField] GameObject consoleRoot;
@@ -28,8 +32,6 @@ namespace HietakissaUtils.Console
         CommandSuggestion[] commandSuggestions = new CommandSuggestion[MAX_SUGGESTIONS];
         const int MAX_SUGGESTIONS = 5;
 
-
-        // todo: maybe figure out a proper way to parse input string into separate parts, not splitting a "this is a string" into 4
 
         void Awake()
         {
@@ -49,7 +51,7 @@ namespace HietakissaUtils.Console
             }
 
             QOL.QOL.RefreshLayoutGroupsImmediateAndRecursive(gameObject);
-            CommandLibrary.Refresh();
+            if (refreshCommandLibraryOnAwake)  CommandLibrary.Refresh();
             Close();
         }
 
@@ -66,13 +68,13 @@ namespace HietakissaUtils.Console
             {
                 matchSelectionIndex--;
             }
-            matchSelectionIndex %= matches.Count;
+
+            if (matchSelectionIndex < 0) matchSelectionIndex = matches.Count - 1;
+            else matchSelectionIndex %= matches.Count;
 
             if (InputWrapper.GetKeyDown(KeyCode.Tab))
             {
-                SetInputFieldText(matches[matchSelectionIndex].Name, true);
-                matchSelectionIndex = 0;
-                UpdateCommandSuggestions();
+                AutofillCommand();
             }
             
             if (indexBefore != matchSelectionIndex)
@@ -99,6 +101,32 @@ namespace HietakissaUtils.Console
 
 
         #region UI management
+        void AutofillCommand()
+        {
+            CommandArgs commandArgs = DebugConsole.ParseArgs(inputField.text);
+            // figure out how many typed out arguments match the parameters of the selected command and append those
+
+            StringBuilder sb = new StringBuilder();
+            Command selectedCommand = matches[matchSelectionIndex];
+
+            sb.Append(selectedCommand.Name);
+            int maxArgs = Mathf.Min(commandArgs.Args.Length, selectedCommand.Parameters.Length);
+            for (int i = 0; i < maxArgs; i++)
+            {
+                // Loop until the selected command doesn't have any more
+                if (i < selectedCommand.Parameters.Length)
+                {
+                    if (selectedCommand.TryParseArgumentOfType(commandArgs.Args[i], selectedCommand.Parameters[i].ParameterType, out _))
+                        sb.Append($" {commandArgs.Args[i]}");
+                    else break; // Break the instant we find an invalid arg
+                }
+            }
+
+            SetInputFieldText(sb.ToString(), true);
+            matchSelectionIndex = 0;
+            UpdateCommandSuggestions();
+        }
+
         void SetInputFieldText(string text, bool notify = false)
         {
             //if (notify) inputField.text = text;
@@ -137,9 +165,8 @@ namespace HietakissaUtils.Console
             matches = DebugConsole.GetCommandsForInput(input, MAX_SUGGESTIONS);
             matchSelectionIndex = Mathf.Min(matchSelectionIndex, matches.Count);
             UpdateCommandSuggestions();
-            //if (string.IsNullOrEmpty(input)) return;
-            
-            // Here you can update your UI to show the matches list
+
+            commandSuggestionRoot.gameObject.SetActive(matches.Count != 0);
         }
 
         void OnInputFieldSubmit(string input)
@@ -148,11 +175,13 @@ namespace HietakissaUtils.Console
             if (matches.Count > 0)
             {
                 //DebugConsole.ExecuteCommand(matches[0], input);
-                Debug.Log($"Execute command: {matches[matchSelectionIndex].Name}");
-                Command command = matches[matchSelectionIndex];
-                DebugConsole.ExecuteCommand(command, input.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                //Command command = matches[matchSelectionIndex];
+                /*DebugConsole.ExecuteCommand(command, input.Split(' ', StringSplitOptions.RemoveEmptyEntries)
                           .Skip(1)
-                          .ToArray());
+                          .ToArray());*/
+                CommandArgs args = DebugConsole.ParseArgs(input);
+                Debug.Log($"Execute command: {args.Name} with args: '[{args.Args.Join(", ")}]'");
+                DebugConsole.ExecuteCommand(args.Name, args.Args);
             }
             else
             {
