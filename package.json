@@ -1,6 +1,6 @@
 {
     "name": "com.hk.hietakissautils",
-    "version": "1.3.8",
+    "version": "1.4.0",
     "displayName": "Hietakissa Utils",
     "description": "A collection of miscellaneous utilities.",
     "license": "MIT",
@@ -16,6 +16,11 @@
             "displayName": "Prototyping",
             "description": "Includes a simple scene useful for prototyping and testing.",
             "path": "Samples~/Prototyping"
+        },
+        {
+            "displayName": "Debug Console",
+            "description": "UGUI-based debug console using Reflection and the [HietakissaUtils.Console.Command] attribute.",
+            "path": "Samples~/Console"
         }
     ]
 }

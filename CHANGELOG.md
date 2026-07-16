@@ -1,9 +1,24 @@
 # Changelog
 
-## WIP
 
-* Complete Console/Command System Refactor
-* ?Simple Tweening System, HKTween
+## \[1.4.0] - 17.7.2026
+
+### New Features
+
+* Refactored Debug Console, UI and extra features still WIP, but commands work with the [Command] attribute, found in the Samples
+* UI Debugger Tool
+* Favorites Tool: Ability to open assets by double clicking
+
+### Changed
+
+* Moved ControlRebinding (for Legacy input manager) to HietakissaUtils.Input and it should work regardless of what Input Systems are enabled
+
+### Added
+
+* HietakissaUtils.Input.InputWrapper for InputSystem-agnostic Key[Down/Up] checking
+* HietakissaUtils.QOL.QOL.RefreshLayoutGroupsImmediateAndRecursive(GameObject root)
+* MovementBlockingInputField inherits from TMP_InputField, allows for disabling vertical or horizontal arrow key movement, must be configured from the Debug inspector for now, though
+
 
 
 ## \[1.3.8] - 10.7.2026
@@ -34,7 +49,7 @@
 * Serializer.ClearSaveData and Serializer.ClearGlobalSaveData no longer require a sub folder to be specified
 * Renamed Maf.FlipOne and float.FlipOne to OneMinus
 * Maf.RandomBool(int) and (float) now both expect a value in the range (0,100)
-* Moved prototyping asses to a sample, so they can actually be properly used
+* Moved prototyping assets to a sample, so they can actually be properly used
 
 ### Added
 

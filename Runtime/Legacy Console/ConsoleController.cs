@@ -731,3 +731,119 @@ public class ConsoleController : MonoBehaviour
         VariableNotDefined
     }
 }
+
+
+/*public class FPSCounter : MonoBehaviour
+{
+    [Header("Settings")]
+    [SerializeField] float updateTime = 3f;
+    [SerializeField] float animationTime = 0.2f;
+    [SerializeField] Color titleColor;
+    [SerializeField] Color valueColor;
+
+    [Header("Toggles")]
+    [SerializeField] bool showOnePercentLow = true;
+    [SerializeField] bool showPointOnePercentLow = true;
+    [SerializeField] bool showMinMax = true;
+
+    [Header("Ref")]
+    [SerializeField] TextMeshProUGUI fpsText;
+
+    readonly Queue<float> frameTimes = new();
+    readonly List<float> allFrameTimes = new(); 
+    float timeSum = 0f;
+
+
+    readonly StringBuilder stringBuilder = new(128);
+
+    float onePercentFps;
+    float pointOnePercentFps;
+    float minFps;
+    float maxFps;
+
+    float onePercentFpsVelocity;
+    float pointOnePercentFpsVelocity;
+    float minFpsVelocity;
+    float maxFpsVelocity;
+
+
+
+    void Update()
+    {
+        ColorUtility.ToHtmlStringRGB(titleColor);
+
+        float deltaTime = Time.unscaledDeltaTime;
+        timeSum += deltaTime;
+        
+        frameTimes.Enqueue(deltaTime);
+
+        int index = allFrameTimes.BinarySearch(deltaTime);
+        if (index < 0) index = ~index;
+        allFrameTimes.Insert(index, deltaTime);
+
+
+
+        stringBuilder.Clear();
+
+        AverageFPS();
+        if (showOnePercentLow) OnePercentLowFPS();
+        if (showPointOnePercentLow) PointOnePercentLowFPS();
+        if (showMinMax) MinMaxFPS();
+
+        fpsText.text = stringBuilder.ToString();
+    }
+
+    void AverageFPS()
+    {
+        while (timeSum > updateTime && frameTimes.Count > 1)
+        {
+            float frameTime = frameTimes.Dequeue();
+            timeSum -= frameTime;
+
+            int index = allFrameTimes.BinarySearch(frameTime);
+            allFrameTimes.RemoveAt(index);
+        }
+
+
+        float avgDelta = timeSum / frameTimes.Count;
+        int avgFps = (int)(1f / avgDelta);
+        float avgMs = avgDelta * 1000;
+
+        stringBuilder.AppendFormat(GetTitleString("Avg") + GetValueString("{0} ({1:F1} ms)"), avgFps, avgMs);
+    }
+    void OnePercentLowFPS()
+    {
+        int onePercentLow = GetPercentileFps(0.01f);
+        onePercentFps = Mathf.SmoothDamp(onePercentFps, onePercentLow, ref onePercentFpsVelocity, animationTime);
+
+        stringBuilder.AppendFormat(GetTitleString("\n1%") + GetValueString("{0:F0}"), onePercentFps);
+    }
+    void PointOnePercentLowFPS()
+    {
+        int pointOneLow = GetPercentileFps(0.001f);
+        pointOnePercentFps = Mathf.SmoothDamp(pointOnePercentFps, pointOneLow, ref pointOnePercentFpsVelocity, animationTime);
+
+        stringBuilder.AppendFormat(GetTitleString("\n0.1%") + GetValueString("{0:F0}"), pointOnePercentFps);
+    }
+    void MinMaxFPS()
+    {
+        int min = GetPercentileFps(0f);
+        int max = GetPercentileFps(1f);
+        minFps = Mathf.SmoothDamp(minFps, min, ref minFpsVelocity, animationTime);
+        maxFps = Mathf.SmoothDamp(maxFps, max, ref maxFpsVelocity, animationTime);
+
+        stringBuilder.AppendFormat(GetTitleString("\nMin") + GetValueString("{0:F0}"), minFps);
+        stringBuilder.AppendFormat(GetTitleString("\nMax") + GetValueString("{0:F0}"), maxFps);
+    }
+
+
+    int GetPercentileFps(float percentile)
+    {
+        // 0.01 percentile, 1500 frametimes > index 15, some of the lowest. In reality the list is reversed since frametimes and fps are inversely relative, so we inverse the percentile first
+        int index = Mathf.Clamp((int)(allFrameTimes.Count * (1f - percentile)), 0, allFrameTimes.Count - 1);
+        return (int)(1f / allFrameTimes[index]);
+    }
+    string GetColorString(Color color) => ColorUtility.ToHtmlStringRGB(color);
+    string GetTitleString(string title) => $"<color=#{GetColorString(titleColor)}>{title}: </color>";
+    string GetValueString(string value) => $"<color=#{GetColorString(valueColor)}>{value}</color>";
+}*/

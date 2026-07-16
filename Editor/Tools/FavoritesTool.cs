@@ -43,20 +43,19 @@ namespace HietakissaUtils.Tools
     public class FavoritesTool : HKTool
     {
         public override string ToolName => "Favorites";
-        private const string PREFS_KEY = "HK_FavoritesData";
+        const string PREFS_KEY = "HK_FavoritesData";
 
-        private FavoritesToolState state;
-        private FavoritesData data => state.data;
+        FavoritesToolState state;
+        FavoritesData data => state.data;
 
-        private int currentGroupIndex = 0;
-        private FavoriteGroup currentGroup => (data.groups.Count > 0 && currentGroupIndex < data.groups.Count) ? data.groups[currentGroupIndex] : null;
+        int currentGroupIndex = 0;
+        FavoriteGroup currentGroup => (data.groups.Count > 0 && currentGroupIndex < data.groups.Count) ? data.groups[currentGroupIndex] : null;
 
-        private FavoriteItem currentSelectedItem;
-        private VisualElement currentSelectedUIElement;
+        FavoriteItem currentSelectedItem;
+        VisualElement currentSelectedUIElement;
 
-        private VisualElement leftPage;
-        private VisualElement rightPage;
-        private VisualElement promptOverlay;
+        VisualElement leftPage;
+        VisualElement rightPage;
 
         bool isItemsUIDirty = false;
 
@@ -99,17 +98,17 @@ namespace HietakissaUtils.Tools
             }
         }
 
-        private void OnUndoRedo()
+        void OnUndoRedo()
         {
             SaveData(); // Sync the restored Undo state back to EditorPrefs
             RefreshGroupsUI();
             RefreshItemsUI();
         }
 
-        private void OnSceneStateChanged(Scene scene, OpenSceneMode mode) => isItemsUIDirty = true;
-        private void OnSceneStateChanged(Scene scene) => isItemsUIDirty = true;
+        void OnSceneStateChanged(Scene scene, OpenSceneMode mode) => isItemsUIDirty = true;
+        void OnSceneStateChanged(Scene scene) => isItemsUIDirty = true;
 
-        private void LoadData()
+        void LoadData()
         {
             if (EditorPrefs.HasKey(PREFS_KEY))
             {
@@ -123,13 +122,13 @@ namespace HietakissaUtils.Tools
             }
         }
 
-        private void SaveData()
+        void SaveData()
         {
             string json = JsonUtility.ToJson(data);
             EditorPrefs.SetString(PREFS_KEY, json);
         }
 
-        private void RecordUndo(string actionName)
+        void RecordUndo(string actionName)
         {
             Undo.RegisterCompleteObjectUndo(state, actionName);
         }
@@ -169,7 +168,7 @@ namespace HietakissaUtils.Tools
             page.Add(splitView);
         }
 
-        private void RefreshGroupsUI()
+        void RefreshGroupsUI()
         {
             leftPage.Clear();
             for (int i = 0; i < data.groups.Count; i++)
@@ -219,7 +218,7 @@ namespace HietakissaUtils.Tools
             leftPage.Add(addGroupBtn);
         }
 
-        private void ShowRenameField(VisualElement container, Label label, FavoriteGroup group)
+        void ShowRenameField(VisualElement container, Label label, FavoriteGroup group)
         {
             container.Remove(label);
             TextField renameField = new TextField { value = group.groupName };
@@ -249,7 +248,7 @@ namespace HietakissaUtils.Tools
             renameField.Focus();
         }
 
-        private void RefreshItemsUI()
+        void RefreshItemsUI()
         {
             rightPage.Clear();
             if (currentGroup == null) return;
@@ -257,17 +256,32 @@ namespace HietakissaUtils.Tools
             foreach (var item in currentGroup.items)
             {
                 PreviewElement preview = new PreviewElement(item);
-                preview.RegisterCallback<PointerDownEvent>(evt => SelectItem(item, preview));
-                preview.RegisterCallback<MouseDownEvent>(evt =>
+                //preview.RegisterCallback<PointerDownEvent>(evt => SelectItem(item, preview));
+                preview.RegisterCallback<PointerDownEvent>(evt =>
                 {
-                    if (evt.clickCount == 2) OpenItem(item);
+                    //bool isRightClick = (evt.pressedButtons & (1 << 1)) != 0;
+                    //Debug.Log($"PointerDownEvent: isRightClick = {isRightClick}");
+                    //if (isRightClick) OpenItem(item);
+                    if (evt.clickCount == 1)
+                    {
+                        if (currentSelectedItem != item) PingItem(item);
+                        SelectItem(item, preview);
+                    }
+                    else if (evt.clickCount == 2) OpenItem(item);
                 });
+                /*preview.RegisterCallback<MouseDownEvent>(evt =>
+                {
+                    Debug.Log("");
+                    bool isRightClick = (evt.pressedButtons & (1 << 1)) != 0;
+                    if (isRightClick) OpenItem(item);
+                    else if (evt.clickCount == 2) PingItem(item);
+                });*/
 
                 rightPage.Add(preview);
             }
         }
 
-        private void SelectItem(FavoriteItem item, VisualElement uiElement)
+        void SelectItem(FavoriteItem item, VisualElement uiElement)
         {
             currentSelectedItem = item;
             if (currentSelectedUIElement != null)
@@ -280,7 +294,7 @@ namespace HietakissaUtils.Tools
             page.Focus();
         }
 
-        private void OnDragPerform(DragPerformEvent evt)
+        void OnDragPerform(DragPerformEvent evt)
         {
             if (currentGroup == null) return;
             DragAndDrop.AcceptDrag();
@@ -311,7 +325,7 @@ namespace HietakissaUtils.Tools
             }
         }
 
-        private void OpenItem(FavoriteItem item)
+        void PingItem(FavoriteItem item)
         {
             if (!GlobalObjectId.TryParse(item.globalObjectId, out GlobalObjectId id)) return;
             Object obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id);
@@ -323,6 +337,20 @@ namespace HietakissaUtils.Tools
                 if (item.isSceneObject)
                     SceneView.FrameLastActiveSceneView();
             }
+        }
+
+        void OpenItem(FavoriteItem item)
+        {
+            if (!GlobalObjectId.TryParse(item.globalObjectId, out GlobalObjectId id)) return;
+            Object obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id);
+
+            if (obj != null)
+            {
+                AssetDatabase.OpenAsset(obj);
+                AssetDatabase.OpenAsset(obj);
+                Selection.activeObject = obj;
+                //EditorGUIUtility.PingObject(obj);
+            }
             else if (item.isSceneObject)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(id.assetGUID.ToString());
@@ -332,14 +360,14 @@ namespace HietakissaUtils.Tools
                         "Yes", () =>
                         {
                             EditorSceneManager.OpenScene(assetPath, OpenSceneMode.Single);
-                            OpenItem(item);
+                            PingItem(item);
                         },
                         "Cancel", null);
                 }
             }
         }
 
-        private void OnKeyDown(KeyDownEvent evt)
+        void OnKeyDown(KeyDownEvent evt)
         {
             if (evt.keyCode == KeyCode.Delete)
             {
@@ -367,7 +395,7 @@ namespace HietakissaUtils.Tools
             }
         }
 
-        private void DeleteCurrentGroup()
+        void DeleteCurrentGroup()
         {
             RecordUndo("Delete Favorites Group");
             data.groups.RemoveAt(currentGroupIndex);

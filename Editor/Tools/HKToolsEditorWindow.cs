@@ -29,6 +29,8 @@ namespace HietakissaUtils.Tools
 
         void Initialize()
         {
+            SceneView.duringSceneGui += OnSceneGUI;
+
             tools = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
                 .Where(type => type.IsSubclassOf(typeof(HKTool)) && !type.IsAbstract)
@@ -60,6 +62,8 @@ namespace HietakissaUtils.Tools
 
         void OnDestroy()
         {
+            SceneView.duringSceneGui -= OnSceneGUI;
+
             currentTool?.OnExit();
             currentTool = null;
         }
@@ -70,6 +74,8 @@ namespace HietakissaUtils.Tools
 
             currentTool?.OnUpdate();
         }
+
+        void OnSceneGUI(SceneView sceneView) => currentTool?.OnSceneGUI(sceneView);
 
         void CalculateDeltaTime()
         {
@@ -159,6 +165,10 @@ namespace HietakissaUtils.Tools
         protected HKToolsEditorWindow window;
         protected VisualElement page;
 
+        public const float CONST_TITLE_FONT_SIZE = 16f;
+        public const float CONST_LABEL_FONT_SIZE = 12f;
+
+
         public void Initialize(VisualElement pageElement, HKToolsEditorWindow editorWindow)
         {
             page = pageElement;
@@ -167,7 +177,9 @@ namespace HietakissaUtils.Tools
 
         public virtual void OnEnter()
         {
-            Debug.Log($"No OnEnter method found for tool {ToolName}. Override to draw your own GUI.");
+            //Debug.Log($"No OnEnter method found for tool {ToolName}. Override to draw your own GUI.");
+            HKToolsUtils.CreateTitle(page, this);
+            HKToolsUtils.CreateLabel(page, $"No OnEnter method. Override to draw your own GUI.", CONST_TITLE_FONT_SIZE);
         }
 
         public virtual void OnExit()
@@ -179,6 +191,11 @@ namespace HietakissaUtils.Tools
         {
 
         }
+
+        public virtual void OnSceneGUI(SceneView sceneView)
+        {
+
+        }
     }
 
     public static class HKToolsUtils
@@ -187,7 +204,7 @@ namespace HietakissaUtils.Tools
         {
             Label title = new Label(tool.ToolName);
             title.style.alignSelf = Align.Center;
-            title.style.fontSize = 16f;
+            title.style.fontSize = HKTool.CONST_TITLE_FONT_SIZE;
             title.style.paddingTop = 5;
             title.style.unityFontStyleAndWeight = FontStyle.Bold;
 
@@ -204,7 +221,7 @@ namespace HietakissaUtils.Tools
             return element;
         }
 
-        public static Label CreateLabel(VisualElement parent, string text, float fontSize = 12f, float flexGrow = 0f)
+        public static Label CreateLabel(VisualElement parent, string text, float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
         {
             Label label = new Label(text);
             label.style.fontSize = fontSize;
@@ -214,7 +231,7 @@ namespace HietakissaUtils.Tools
             return label;
         }
 
-        public static Button CreateButton(VisualElement parent, Action onClickEvent, string buttonText = "", float fontSize = 12f, float flexGrow = 0f)
+        public static Button CreateButton(VisualElement parent, Action onClickEvent, string buttonText = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
         {
             Button button = new Button(onClickEvent);
             button.text = buttonText;
@@ -225,18 +242,19 @@ namespace HietakissaUtils.Tools
             return button;
         }
 
-        public static Toggle CreateToggle(VisualElement parent, EventCallback<ChangeEvent<bool>> callback, string toggleText = "", float fontSize = 12f, float flexGrow = 0f)
+        public static Toggle CreateToggle(VisualElement parent, EventCallback<ChangeEvent<bool>> callback, bool defaultValue = false, string toggleText = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
         {
             Toggle toggle = new Toggle(toggleText);
             toggle.RegisterValueChangedCallback(callback);
             toggle.style.fontSize = fontSize;
             toggle.style.flexGrow = flexGrow;
+            toggle.SetValueWithoutNotify(defaultValue);
 
             parent.Add(toggle);
             return toggle;
         }
 
-        public static TextField CreateTextField(VisualElement parent, EventCallback<ChangeEvent<string>> callback, string fieldName = "", float fontSize = 12f, float flexGrow = 0f, bool isDelayed = true)
+        public static TextField CreateTextField(VisualElement parent, EventCallback<ChangeEvent<string>> callback, string fieldName = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f, bool isDelayed = true)
         {
             TextField textField = new TextField(fieldName);
             textField.RegisterValueChangedCallback(callback);
@@ -248,7 +266,7 @@ namespace HietakissaUtils.Tools
             return textField;
         }
 
-        public static IntegerField CreateIntegerField(VisualElement parent, EventCallback<ChangeEvent<int>> callback, string fieldName = "", float fontSize = 12f, float flexGrow = 0f, bool isDelayed = true)
+        public static IntegerField CreateIntegerField(VisualElement parent, EventCallback<ChangeEvent<int>> callback, string fieldName = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f, bool isDelayed = true)
         {
             IntegerField intField = new IntegerField(fieldName);
             intField.RegisterValueChangedCallback(callback);
@@ -260,7 +278,7 @@ namespace HietakissaUtils.Tools
             return intField;
         }
 
-        public static FloatField CreateFloatField(VisualElement parent, EventCallback<ChangeEvent<float>> callback, string fieldName = "", float fontSize = 12f, float flexGrow = 0f, bool isDelayed = true)
+        public static FloatField CreateFloatField(VisualElement parent, EventCallback<ChangeEvent<float>> callback, string fieldName = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f, bool isDelayed = true)
         {
             FloatField floatField = new FloatField(fieldName);
             floatField.RegisterValueChangedCallback(callback);
@@ -272,6 +290,17 @@ namespace HietakissaUtils.Tools
             return floatField;
         }
 
+        public static Slider CreateSlider(VisualElement parent, EventCallback<ChangeEvent<float>> callback, float min = 0f, float max = 1f, float defaultValue = 0f, SliderDirection direction = SliderDirection.Horizontal, string sliderName = "", float fontSize = HKTool.CONST_LABEL_FONT_SIZE, float flexGrow = 0f)
+        {
+            Slider slider = new Slider(sliderName, min, max, direction);
+            slider.RegisterCallback(callback);
+            slider.style.fontSize = fontSize;
+            slider.style.flexGrow = flexGrow;
+            slider.SetValueWithoutNotify(defaultValue);
+
+            parent.Add(slider);
+            return slider;
+        }
 
 
         public static StyleLength GetStyleLengthForPercentage(float percentage) => new StyleLength(new Length(percentage, LengthUnit.Percent));

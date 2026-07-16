@@ -1,16 +1,22 @@
 namespace HietakissaUtils
 {
-    using Random = UnityEngine.Random;
+    using Newtonsoft.Json;
+
+    using Serialization;
+
+    using System;
     using System.Collections.Generic;
     using System.IO.Compression;
-    using System.Reflection;
-    using Newtonsoft.Json;
-    using Serialization;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
-    using UnityEngine;
+
     using UnityEditor;
-    using System;
+
+    using UnityEngine;
+    using UnityEngine.UI;
+
+    using Random = UnityEngine.Random;
 
     public static class Extensions
     {
@@ -139,6 +145,43 @@ namespace HietakissaUtils
         public static string RemoveFirst(this string targetString, string stringToRemove)
         {
             return targetString.ReplaceFirst(stringToRemove, "");
+        }
+
+        public static string Join(this string[] targetArray, string separator) => string.Join(separator, targetArray);
+
+        public static int LevenshteinDistance(this string s1, string s2)
+        {
+            int m = s1.Length;
+            int n = s2.Length;
+
+            // Create a 2D matrix to store distances
+            int[,] dp = new int[m + 1, n + 1];
+
+            // Initialize the first row and column
+            for (int i = 0; i <= m; i++)
+                dp[i, 0] = i;
+            for (int j = 0; j <= n; j++)
+                dp[0, j] = j;
+
+            // Fill the matrix
+            for (int i = 1; i <= m; i++)
+            {
+                for (int j = 1; j <= n; j++)
+                {
+                    if (s1[i - 1] == s2[j - 1])
+                    {
+                        dp[i, j] = dp[i - 1, j - 1]; // Characters match
+                    }
+                    else
+                    {
+                        dp[i, j] = Mathf.Min(
+                            Mathf.Min(dp[i - 1, j], dp[i, j - 1]), // Deletion or Insertion
+                            dp[i - 1, j - 1]) + 1;                      // Substitution
+                    }
+                }
+            }
+
+            return dp[m, n];
         }
         #endregion
 
@@ -337,6 +380,8 @@ namespace HietakissaUtils
         public static float GetRandomInRange(this Vector2 vector2) => Random.Range(vector2.x, vector2.y);
 
         public static float GetMaxClipLength(this AudioSource source) => source.clip ? source.clip.length / Mathf.Abs(source.pitch) : 0f;
+
+        public static Color WithAlpha(this Color color, float alpha) => new Color(color.r, color.g, color.b, alpha);
     }
 
     public abstract class Maf
@@ -566,81 +611,6 @@ namespace HietakissaUtils
         }
     }
 
-    public static class ControlRebinding
-    {
-        static Dictionary<string, KeyCode> bindings;
-
-        static KeyCode[] validKeycodes;
-        static KeyCode keyCode;
-
-        public static bool binding { get; private set; }
-        static string bindingKeyName;
-
-        public static event Action OnKeyRebound;
-
-        public static void SetValidKeycodes(bool includeController = false)
-        {
-            bindings = new Dictionary<string, KeyCode>();
-            validKeycodes = Enum.GetValues(typeof(KeyCode))
-                .Cast<KeyCode>()
-                .Where(k => !includeController ? (int)k < 330 : true)
-                .ToArray();
-        }
-
-        public static KeyCode GetPressedKey()
-        {
-            if (!Input.anyKeyDown) return KeyCode.None;
-
-            for (int i = 0; i < validKeycodes.Length; i++)
-            {
-                keyCode = validKeycodes[i];
-                if (Input.GetKeyDown(keyCode)) return keyCode;
-            }
-
-            return KeyCode.None;
-        }
-
-        public static KeyCode GetKeyWithName(string name)
-        {
-            return bindings[name];
-        }
-
-        public static void StartBinding(string name)
-        {
-            binding = true;
-            bindingKeyName = name;
-        }
-
-        public static void HandleBinding()
-        {
-            KeyCode key = GetPressedKey();
-
-            if (key != KeyCode.None)
-            {
-                EditBinding(bindingKeyName, key);
-                binding = false;
-            }
-        }
-
-        public static void EditBinding(string name, KeyCode key)
-        {
-            bindings[name] = key;
-            OnKeyRebound?.Invoke();
-        }
-
-        public static void SaveBindings()
-        {
-            Serializer.SaveGlobal(bindings, "ControlBindings");
-        }
-
-        public static void LoadBindings()
-        {
-            if (Serializer.LoadGlobal(out bindings, "ControlBindings"))
-            {
-                OnKeyRebound?.Invoke();
-            }
-        }
-    }
 
     public static class Regexer
     {
@@ -1558,6 +1528,15 @@ namespace HietakissaUtils
                 public void PurgeCache() => waitDictionary.Clear();
                 public int GetCacheSize() => waitDictionary.Count;
             }
+
+            public static void RefreshLayoutGroupsImmediateAndRecursive(GameObject root)
+            {
+                foreach (var layoutGroup in root.GetComponentsInChildren<LayoutGroup>())
+                {
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(layoutGroup.GetComponent<RectTransform>());
+                }
+            }
+
 
 #if !UNITY_EDITOR && HK_LOG_OFF
 [System.Diagnostics.Conditional("c5ae3fäf7d9ö9f")]
